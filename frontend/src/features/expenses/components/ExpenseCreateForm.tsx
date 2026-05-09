@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 
 import { ErrorMessage } from "../../../components/ErrorMessage";
 import { ApiError } from "../../../lib/api/apiError";
+import { formatCurrency } from "../../../lib/formatters";
 import { createExpense, Expense } from "../api/expenseApi";
 
 type ExpenseCreateFormProps = {
@@ -18,19 +19,19 @@ type QuickExpensePreset = {
 const quickExpensePresets: QuickExpensePreset[] = [
   {
     label: "Coffee",
-    amount: "4.50",
+    amount: "80.00",
     category: "Coffee",
     description: "Quick coffee stop",
   },
   {
     label: "Snack",
-    amount: "6.00",
+    amount: "50.00",
     category: "Snacks",
     description: "Small snack purchase",
   },
   {
     label: "Ride",
-    amount: "9.00",
+    amount: "120.00",
     category: "Transport",
     description: "Short ride",
   },
@@ -113,7 +114,7 @@ export function ExpenseCreateForm({ onCreated }: ExpenseCreateFormProps) {
             type="button"
           >
             <span>{preset.label}</span>
-            <strong>${preset.amount}</strong>
+            <strong>{formatCurrency(preset.amount)}</strong>
           </button>
         ))}
       </div>
@@ -126,7 +127,7 @@ export function ExpenseCreateForm({ onCreated }: ExpenseCreateFormProps) {
             min="0.01"
             name="amount"
             onChange={(event) => setAmount(event.target.value)}
-            placeholder="12.50"
+            placeholder="120.00"
             required
             step="0.01"
             type="number"

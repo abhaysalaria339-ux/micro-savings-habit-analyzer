@@ -7,6 +7,7 @@ import {
 import { ErrorMessage } from "../components/ErrorMessage";
 import { StateMessage } from "../components/StateMessage";
 import { ApiError } from "../lib/api/apiError";
+import { formatCurrency } from "../lib/formatters";
 
 const reductionPresets = ["5", "10", "15", "25"];
 
@@ -76,7 +77,7 @@ export function SimulatorPage() {
                 inputMode="decimal"
                 min="0.01"
                 onChange={(event) => setCurrentMonthlyAmount(event.target.value)}
-                placeholder="300.00"
+                placeholder="3000.00"
                 required
                 step="0.01"
                 type="number"
@@ -170,13 +171,6 @@ export function SimulatorPage() {
       </div>
     </section>
   );
-}
-
-function formatCurrency(amount: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount));
 }
 
 function toSimulatorErrorMessage(error: unknown): string {

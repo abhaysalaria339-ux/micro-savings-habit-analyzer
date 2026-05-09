@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "../lib/api/apiError";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { StateMessage } from "../components/StateMessage";
+import { formatCurrency } from "../lib/formatters";
 import {
   DashboardResponse,
   getDashboard,
@@ -218,13 +219,6 @@ function sumSavings(insights: DashboardResponse["savings_opportunities"]): strin
   return insights
     .reduce((total, insight) => total + Number(insight.estimated_monthly_savings), 0)
     .toFixed(2);
-}
-
-function formatCurrency(amount: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount));
 }
 
 function formatShortDate(value: string): string {

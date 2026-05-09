@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ApiError } from "../lib/api/apiError";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { StateMessage } from "../components/StateMessage";
+import { formatCurrency } from "../lib/formatters";
 import {
   getSavingsInsights,
   getSpendingAlerts,
@@ -171,13 +172,6 @@ export function InsightsPage() {
       </section>
     </section>
   );
-}
-
-function formatCurrency(amount: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount));
 }
 
 function formatInsightType(type: string): string {

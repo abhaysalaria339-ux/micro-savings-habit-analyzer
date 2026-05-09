@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { ErrorMessage } from "../../../components/ErrorMessage";
 import { ApiError } from "../../../lib/api/apiError";
+import { formatCurrency } from "../../../lib/formatters";
 import { StateMessage } from "../../../components/StateMessage";
 import {
   deleteExpense,
@@ -373,13 +374,6 @@ function endOfDayIso(dateValue: string): string {
 function toDateTimeLocalValue(date: Date): string {
   const offsetMs = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-function formatCurrency(amount: string): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(Number(amount));
 }
 
 function formatDate(value: string): string {
