@@ -1,0 +1,73 @@
+x-backend-environment: &backend-environment
+  APP_NAME: Micro-Savings Habit Analyzer API
+  APP_ENV: development
+  APP_DEBUG: "false"
+  API_V1_PREFIX: /api/v1
+  DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-micro_savings}
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-before-production-please}
+  JWT_ALGORITHM: HS256
+  ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+  BACKEND_CORS_ORIGINS: '["http://localhost:5173","http://127.0.0.1:5173"]'
+  BACKEND_CORS_ALLOW_METHODS: '["GET","POST","PATCH","DELETE","OPTIONS"]'
+  BACKEND_CORS_ALLOW_HEADERS: '["Accept","Authorization","Content-Type"]'
+  LOG_LEVEL: INFO
+  LOG_FORMAT: plain
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-micro_savings}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-micro_savings}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-migrate:
+    build:
+      context: ./backend
+    image: micro-savings-backend:local
+    command: ["alembic", "upgrade", "head"]
+    environment: *backend-environment
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+    image: micro-savings-backend:local
+    environment: *backend-environment
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      backend-migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${FRONTEND_API_BASE_URL:-http://127.0.0.1:8000/api/v1}
+    image: micro-savings-frontend:local
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
