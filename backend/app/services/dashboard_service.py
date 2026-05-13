@@ -71,6 +71,12 @@ class DashboardService:
             start_date=resolved_start_date,
             end_date=resolved_end_date,
         )
+        habit_timeline = await self.analytics_service.build_habit_timeline(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+            limit=5,
+        )
         goals = await self.goal_service.list_goals(user_id=user_id, is_completed=None)
 
         return DashboardResponse(
@@ -83,6 +89,7 @@ class DashboardService:
             alerts=alerts.alerts,
             money_leaks=money_leaks,
             money_leak_score=money_leak_score,
+            habit_timeline=habit_timeline,
             goals=goals,
         )
 

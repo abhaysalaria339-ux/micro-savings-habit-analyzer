@@ -8,6 +8,8 @@ from app.schemas.analytics import (
     BehaviorScoreFactor,
     CategorySpendingSummary,
     FinancialBehaviorScore,
+    HabitTimelineEvent,
+    HabitTimelineResponse,
     MicroExpenseAnalysis,
     MicroExpensePattern,
     MoneyLeakAnalysis,
@@ -571,6 +573,175 @@ class AnalyticsService:
             points=points,
         )
 
+    async def build_habit_timeline(
+        self,
+        *,
+        user_id: UUID,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        limit: int = 8,
+    ) -> HabitTimelineResponse:
+        resolved_start_date, resolved_end_date = self._resolve_analysis_period(
+            start_date=start_date,
+            end_date=end_date,
+        )
+        spending_summary = await self.get_spending_summary(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+        )
+        micro_expenses = await self.detect_micro_expenses(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+            max_expense_amount=Decimal("100.00"),
+            min_occurrences=3,
+        )
+        weekday_weekend = await self.compare_weekday_weekend_spending(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+        )
+        money_leaks = await self.detect_money_leaks(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+            min_occurrences=3,
+        )
+        spending_trends = await self.analyze_spending_trends(
+            user_id=user_id,
+            interval="daily",
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+        )
+
+        events: list[HabitTimelineEvent] = []
+
+        if spending_summary.transaction_count == 0:
+            return HabitTimelineResponse(
+                start_date=resolved_start_date,
+                end_date=resolved_end_date,
+                events=[
+                    HabitTimelineEvent(
+                        event_type="positive_signal",
+                        severity="info",
+                        title="Start your habit story",
+                        description="No expenses were found for this period yet.",
+                        happened_at=resolved_end_date,
+                        action="Add daily expenses for a few days to unlock timeline signals.",
+                    )
+                ],
+            )
+
+        top_category = spending_summary.categories[0] if spending_summary.categories else None
+        if top_category and top_category.percentage_of_total >= Decimal("35.00"):
+            events.append(
+                HabitTimelineEvent(
+                    event_type="category_focus",
+                    severity="warning",
+                    title=f"{top_category.category} is driving spend",
+                    description=(
+                        f"{top_category.category} represents "
+                        f"{top_category.percentage_of_total}% of spending in this period."
+                    ),
+                    happened_at=resolved_end_date,
+                    amount=top_category.total_amount,
+                    category=top_category.category,
+                    action=(
+                        "Review the top three transactions in this category before the next "
+                        "spend."
+                    ),
+                )
+            )
+
+        top_micro_pattern = max(
+            micro_expenses.patterns,
+            key=lambda pattern: pattern.projected_monthly_amount,
+            default=None,
+        )
+        if top_micro_pattern:
+            label = top_micro_pattern.description or top_micro_pattern.category
+            events.append(
+                HabitTimelineEvent(
+                    event_type="micro_spending",
+                    severity="warning",
+                    title=f"{label} became a micro-spend pattern",
+                    description=(
+                        f"{top_micro_pattern.occurrence_count} small repeated spends "
+                        f"could become a monthly habit cost."
+                    ),
+                    happened_at=top_micro_pattern.latest_spent_at,
+                    amount=top_micro_pattern.projected_monthly_amount,
+                    category=top_micro_pattern.category,
+                    action="Set a weekly cap or skip this pattern twice this week.",
+                )
+            )
+
+        if weekday_weekend.weekend.percentage_of_total >= Decimal("40.00"):
+            events.append(
+                HabitTimelineEvent(
+                    event_type="weekend_shift",
+                    severity="warning",
+                    title="Weekend spending is standing out",
+                    description=(
+                        f"Weekend spending is {weekday_weekend.weekend.percentage_of_total}% "
+                        "of the selected period."
+                    ),
+                    happened_at=resolved_end_date,
+                    amount=weekday_weekend.weekend.total_amount,
+                    action="Plan one lower-cost weekend choice before the weekend starts.",
+                )
+            )
+
+        top_leak_pattern = max(
+            money_leaks.patterns,
+            key=lambda pattern: pattern.projected_monthly_leak,
+            default=None,
+        )
+        if top_leak_pattern:
+            label = top_leak_pattern.description or top_leak_pattern.category
+            events.append(
+                HabitTimelineEvent(
+                    event_type="money_leak",
+                    severity="critical" if top_leak_pattern.leak_risk == "high" else "warning",
+                    title=f"{label} looks like a money leak",
+                    description=top_leak_pattern.reason,
+                    happened_at=resolved_end_date,
+                    amount=top_leak_pattern.projected_monthly_leak,
+                    category=top_leak_pattern.category,
+                    action=(
+                        "Pause or reduce this pattern for seven days and move the saved "
+                        "money to a goal."
+                    ),
+                )
+            )
+
+        trend_event = self._build_trend_timeline_event(
+            spending_trends=spending_trends,
+            fallback_date=resolved_end_date,
+        )
+        if trend_event:
+            events.append(trend_event)
+
+        if not any(event.severity in {"warning", "critical"} for event in events):
+            events.append(
+                HabitTimelineEvent(
+                    event_type="positive_signal",
+                    severity="positive",
+                    title="Spending pattern looks steady",
+                    description="No major concentration, leak, or weekend pressure was detected.",
+                    happened_at=resolved_end_date,
+                    action="Keep tracking and route any leftover amount into an active goal.",
+                )
+            )
+
+        sorted_events = sorted(events, key=lambda event: event.happened_at, reverse=True)
+        return HabitTimelineResponse(
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+            events=sorted_events[:limit],
+        )
+
     def _calculate_percentage(self, amount: Decimal, total_amount: Decimal) -> Decimal:
         if total_amount == Decimal("0"):
             return Decimal("0.00")
@@ -800,6 +971,53 @@ class AnalyticsService:
     ) -> str:
         label = pattern_description or category
         return f"{label} repeats about every {average_days_between} days."
+
+    def _build_trend_timeline_event(
+        self,
+        *,
+        spending_trends: SpendingTrendAnalysis,
+        fallback_date: datetime,
+    ) -> HabitTimelineEvent | None:
+        points = [point for point in spending_trends.points if point.total_amount > Decimal("0.00")]
+        if len(points) < 2:
+            return None
+
+        first_point = points[0]
+        latest_point = points[-1]
+        if first_point.total_amount == Decimal("0.00"):
+            return None
+
+        change_percentage = self._calculate_percentage(
+            latest_point.total_amount - first_point.total_amount,
+            first_point.total_amount,
+        )
+        if abs(change_percentage) < Decimal("20.00"):
+            return None
+
+        if change_percentage > Decimal("0.00"):
+            return HabitTimelineEvent(
+                event_type="spending_trend",
+                severity="warning",
+                title="Recent daily spend moved upward",
+                description=(
+                    f"Latest daily spending is {change_percentage}% above the first active day."
+                ),
+                happened_at=latest_point.period_start or fallback_date,
+                amount=latest_point.total_amount,
+                action="Check what changed recently and remove one avoidable repeat spend.",
+            )
+
+        return HabitTimelineEvent(
+            event_type="spending_trend",
+            severity="positive",
+            title="Recent daily spend moved down",
+            description=(
+                f"Latest daily spending is {abs(change_percentage)}% below the first active day."
+            ),
+            happened_at=latest_point.period_start or fallback_date,
+            amount=latest_point.total_amount,
+            action="Protect this lower-spend pattern for the next few days.",
+        )
 
     def _to_postgres_trend_interval(
         self,

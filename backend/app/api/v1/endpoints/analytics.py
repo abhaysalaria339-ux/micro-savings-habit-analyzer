@@ -11,6 +11,7 @@ from app.models.user import User
 from app.repositories.expense_repository import ExpenseRepository
 from app.schemas.analytics import (
     FinancialBehaviorScore,
+    HabitTimelineResponse,
     MicroExpenseAnalysis,
     MoneyLeakAnalysis,
     MoneyLeakScore,
@@ -209,6 +210,30 @@ async def analyze_spending_trends(
         interval=interval,
         start_date=start_date,
         end_date=end_date,
+    )
+
+
+@router.get(
+    "/habit-timeline",
+    response_model=HabitTimelineResponse,
+    summary="Build habit timeline",
+    description="Return behavior-focused timeline events from spending patterns.",
+)
+async def build_habit_timeline(
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+    limit: Annotated[int, Query(ge=1, le=20)] = 8,
+) -> HabitTimelineResponse:
+    _validate_date_range(start_date=start_date, end_date=end_date)
+
+    analytics_service = AnalyticsService(ExpenseRepository(db_session))
+    return await analytics_service.build_habit_timeline(
+        user_id=current_user.id,
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
     )
 
 

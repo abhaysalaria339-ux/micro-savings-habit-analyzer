@@ -10,6 +10,7 @@ export type DashboardResponse = {
   alerts: SpendingAlert[];
   money_leaks: MoneyLeakAnalysis;
   money_leak_score: MoneyLeakScore;
+  habit_timeline: HabitTimelineResponse;
   goals: Goal[];
 };
 
@@ -115,6 +116,29 @@ export type MoneyLeakPattern = {
   average_days_between: string | null;
   leak_risk: "low" | "medium" | "high";
   reason: string;
+};
+
+export type HabitTimelineResponse = {
+  start_date: string;
+  end_date: string;
+  events: HabitTimelineEvent[];
+};
+
+export type HabitTimelineEvent = {
+  event_type:
+    | "micro_spending"
+    | "weekend_shift"
+    | "category_focus"
+    | "money_leak"
+    | "positive_signal"
+    | "spending_trend";
+  severity: "info" | "positive" | "warning" | "critical";
+  title: string;
+  description: string;
+  happened_at: string;
+  amount: string | null;
+  category: string | null;
+  action: string;
 };
 
 export type Goal = {

@@ -133,6 +133,30 @@ class MoneyLeakScore(BaseModel):
     evidence: list[MoneyLeakScoreEvidence]
 
 
+class HabitTimelineEvent(BaseModel):
+    event_type: Literal[
+        "micro_spending",
+        "weekend_shift",
+        "category_focus",
+        "money_leak",
+        "positive_signal",
+        "spending_trend",
+    ]
+    severity: Literal["info", "positive", "warning", "critical"]
+    title: str
+    description: str
+    happened_at: datetime
+    amount: Decimal | None = None
+    category: str | None = None
+    action: str
+
+
+class HabitTimelineResponse(BaseModel):
+    start_date: datetime
+    end_date: datetime
+    events: list[HabitTimelineEvent]
+
+
 class SpendingTrendPoint(BaseModel):
     period_start: datetime
     total_amount: Decimal

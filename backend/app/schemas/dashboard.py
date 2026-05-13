@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from app.schemas.alert import SpendingAlert
 from app.schemas.analytics import (
     FinancialBehaviorScore,
+    HabitTimelineResponse,
     MoneyLeakAnalysis,
     MoneyLeakScore,
     SpendingSummary,
@@ -24,4 +25,5 @@ class DashboardResponse(BaseModel):
     alerts: list[SpendingAlert]
     money_leaks: MoneyLeakAnalysis
     money_leak_score: MoneyLeakScore
+    habit_timeline: HabitTimelineResponse
     goals: list[GoalRead]

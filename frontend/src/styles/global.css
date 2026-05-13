@@ -315,6 +315,8 @@ textarea:focus-visible {
 .app-sidebar {
   position: sticky;
   top: 0;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   border-right: 1px solid var(--color-border);
   background: rgba(255, 255, 255, 0.78);
@@ -399,6 +401,20 @@ textarea:focus-visible {
   border-radius: 999px;
   background: var(--color-primary);
   content: "";
+}
+
+.app-credit {
+  margin: auto 0 0;
+  color: var(--color-text-soft);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.45;
+  opacity: 0.58;
+}
+
+.app-credit span {
+  display: block;
+  color: var(--color-text-muted);
 }
 
 .app-main {
@@ -772,6 +788,93 @@ textarea:focus-visible {
   color: #34403c;
   font-size: 14px;
   line-height: 1.45;
+}
+
+.habit-timeline-panel {
+  margin-top: 16px;
+}
+
+.habit-timeline-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.habit-timeline-list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 0 0 18px;
+}
+
+.habit-timeline-list li:not(:last-child)::before {
+  position: absolute;
+  top: 20px;
+  bottom: 0;
+  left: 7px;
+  width: 1px;
+  background: var(--color-border);
+  content: "";
+}
+
+.timeline-dot {
+  z-index: 1;
+  width: 15px;
+  height: 15px;
+  margin-top: 4px;
+  border: 3px solid var(--color-surface-solid);
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.22);
+}
+
+.timeline-dot.positive {
+  background: var(--color-savings);
+  box-shadow: 0 0 0 1px rgba(18, 128, 92, 0.22);
+}
+
+.timeline-dot.warning {
+  background: var(--color-warning);
+  box-shadow: 0 0 0 1px rgba(183, 121, 31, 0.24);
+}
+
+.timeline-dot.critical {
+  background: var(--color-danger);
+  box-shadow: 0 0 0 1px rgba(180, 35, 24, 0.24);
+}
+
+.habit-timeline-list time,
+.habit-timeline-list small {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.habit-timeline-list strong {
+  display: block;
+  margin: 3px 0 5px;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.habit-timeline-list p {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.timeline-amount {
+  align-self: start;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  white-space: nowrap;
 }
 
 .status-list,
@@ -1528,6 +1631,10 @@ textarea:focus-visible {
     display: none;
   }
 
+  .app-credit {
+    margin-top: 12px;
+  }
+
   .metric-grid,
   .dashboard-grid,
   .money-leak-score-grid,
@@ -1743,8 +1850,18 @@ textarea:focus-visible {
   .recommendation-list li,
   .simulation-result-grid article,
   .ml-profile-summary,
-  .ml-profile-list li {
+  .ml-profile-list li,
+  .habit-timeline-list li {
     min-width: 0;
+  }
+
+  .habit-timeline-list li {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+
+  .timeline-amount {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 

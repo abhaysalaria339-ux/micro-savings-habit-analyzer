@@ -77,6 +77,10 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <p className="app-credit">
+          Developed by <span>Abhay Salaria</span>
+        </p>
       </aside>
 
       <div className="app-main">

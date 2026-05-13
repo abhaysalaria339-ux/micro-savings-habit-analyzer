@@ -7,6 +7,7 @@ import { formatCurrency } from "../lib/formatters";
 import {
   DashboardResponse,
   getDashboard,
+  HabitTimelineEvent,
   SpendingTrendPoint,
 } from "../features/dashboard/api/dashboardApi";
 
@@ -190,6 +191,17 @@ export function DashboardPage() {
         )}
       </section>
 
+      <section className="dashboard-panel habit-timeline-panel" aria-labelledby="habit-timeline-title">
+        <div className="panel-heading">
+          <div>
+            <p>Behavior story</p>
+            <h2 id="habit-timeline-title">Habit timeline</h2>
+          </div>
+        </div>
+
+        <HabitTimeline events={dashboard?.habit_timeline?.events ?? []} />
+      </section>
+
       <div className="dashboard-grid lower">
         <section className="dashboard-panel" aria-labelledby="opportunities-title">
           <div className="panel-heading">
@@ -235,6 +247,36 @@ export function DashboardPage() {
         </section>
       </div>
     </section>
+  );
+}
+
+function HabitTimeline({ events }: { events: HabitTimelineEvent[] }) {
+  if (events.length === 0) {
+    return (
+      <StateMessage
+        description="Add more expenses and the timeline will turn spending behavior into clear habit moments."
+        title="No timeline events yet"
+      />
+    );
+  }
+
+  return (
+    <ol className="habit-timeline-list">
+      {events.slice(0, 5).map((event) => (
+        <li key={`${event.event_type}-${event.happened_at}-${event.title}`}>
+          <span className={`timeline-dot ${event.severity}`} aria-hidden="true" />
+          <div>
+            <time dateTime={event.happened_at}>{formatShortDate(event.happened_at)}</time>
+            <strong>{event.title}</strong>
+            <p>{event.description}</p>
+            <small>{event.action}</small>
+          </div>
+          {event.amount ? (
+            <span className="timeline-amount">{formatCurrency(event.amount)}</span>
+          ) : null}
+        </li>
+      ))}
+    </ol>
   );
 }
 
