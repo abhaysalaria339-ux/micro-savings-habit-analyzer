@@ -66,6 +66,11 @@ class DashboardService:
             end_date=resolved_end_date,
             min_occurrences=3,
         )
+        money_leak_score = await self.analytics_service.calculate_money_leak_score(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+        )
         goals = await self.goal_service.list_goals(user_id=user_id, is_completed=None)
 
         return DashboardResponse(
@@ -77,6 +82,7 @@ class DashboardService:
             behavior_score=behavior_score,
             alerts=alerts.alerts,
             money_leaks=money_leaks,
+            money_leak_score=money_leak_score,
             goals=goals,
         )
 

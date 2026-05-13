@@ -113,6 +113,26 @@ class MoneyLeakAnalysis(BaseModel):
     patterns: list[MoneyLeakPattern]
 
 
+class MoneyLeakScoreEvidence(BaseModel):
+    name: str
+    impact: int
+    message: str
+
+
+class MoneyLeakScore(BaseModel):
+    start_date: datetime
+    end_date: datetime
+    score: int
+    risk_level: Literal["low", "medium", "high", "critical"]
+    projected_monthly_leak: Decimal
+    leak_ratio: Decimal
+    pattern_count: int
+    top_leak_category: str | None
+    summary: str
+    recommended_action: str
+    evidence: list[MoneyLeakScoreEvidence]
+
+
 class SpendingTrendPoint(BaseModel):
     period_start: datetime
     total_amount: Decimal

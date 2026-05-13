@@ -12,6 +12,8 @@ from app.schemas.analytics import (
     MicroExpensePattern,
     MoneyLeakAnalysis,
     MoneyLeakPattern,
+    MoneyLeakScore,
+    MoneyLeakScoreEvidence,
     RepeatedSpendingAnalysis,
     RepeatedSpendingPattern,
     SpendingSummary,
@@ -449,6 +451,86 @@ class AnalyticsService:
             patterns=patterns,
         )
 
+    async def calculate_money_leak_score(
+        self,
+        *,
+        user_id: UUID,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> MoneyLeakScore:
+        resolved_start_date, resolved_end_date = self._resolve_analysis_period(
+            start_date=start_date,
+            end_date=end_date,
+        )
+        spending_summary = await self.get_spending_summary(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+        )
+        money_leaks = await self.detect_money_leaks(
+            user_id=user_id,
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+            min_occurrences=3,
+        )
+
+        if spending_summary.transaction_count == 0:
+            return MoneyLeakScore(
+                start_date=resolved_start_date,
+                end_date=resolved_end_date,
+                score=0,
+                risk_level="low",
+                projected_monthly_leak=Decimal("0.00"),
+                leak_ratio=Decimal("0.00"),
+                pattern_count=0,
+                top_leak_category=None,
+                summary="No spending history is available for money leak scoring yet.",
+                recommended_action="Add daily expenses for at least two weeks to detect leaks.",
+                evidence=[
+                    MoneyLeakScoreEvidence(
+                        name="insufficient_data",
+                        impact=0,
+                        message="No expenses were found for the selected period.",
+                    )
+                ],
+            )
+
+        leak_ratio = self._calculate_percentage(
+            money_leaks.projected_monthly_leak,
+            spending_summary.total_amount,
+        )
+        top_pattern = max(
+            money_leaks.patterns,
+            key=lambda pattern: pattern.projected_monthly_leak,
+            default=None,
+        )
+        score = self._calculate_money_leak_risk_score(
+            leak_ratio=leak_ratio,
+            patterns=money_leaks.patterns,
+        )
+
+        return MoneyLeakScore(
+            start_date=resolved_start_date,
+            end_date=resolved_end_date,
+            score=score,
+            risk_level=self._classify_money_leak_score(score),
+            projected_monthly_leak=money_leaks.projected_monthly_leak,
+            leak_ratio=leak_ratio,
+            pattern_count=len(money_leaks.patterns),
+            top_leak_category=top_pattern.category if top_pattern else None,
+            summary=self._build_money_leak_score_summary(
+                score=score,
+                leak_ratio=leak_ratio,
+                top_pattern=top_pattern,
+            ),
+            recommended_action=self._build_money_leak_score_action(top_pattern=top_pattern),
+            evidence=self._build_money_leak_score_evidence(
+                leak_ratio=leak_ratio,
+                patterns=money_leaks.patterns,
+                top_pattern=top_pattern,
+            ),
+        )
+
     async def analyze_spending_trends(
         self,
         *,
@@ -602,6 +684,112 @@ class AnalyticsService:
             return "medium"
 
         return "low"
+
+    def _calculate_money_leak_risk_score(
+        self,
+        *,
+        leak_ratio: Decimal,
+        patterns: list[MoneyLeakPattern],
+    ) -> int:
+        if not patterns:
+            return 0
+
+        if leak_ratio >= Decimal("35.00"):
+            score = 82
+        elif leak_ratio >= Decimal("20.00"):
+            score = 65
+        elif leak_ratio >= Decimal("10.00"):
+            score = 45
+        else:
+            score = 25
+
+        score += min(len(patterns), 4) * 4
+        score += sum(8 for pattern in patterns if pattern.leak_risk == "high")
+        score += sum(4 for pattern in patterns if pattern.leak_risk == "medium")
+
+        return max(0, min(score, 100))
+
+    def _classify_money_leak_score(
+        self,
+        score: int,
+    ) -> Literal["low", "medium", "high", "critical"]:
+        if score >= 80:
+            return "critical"
+
+        if score >= 60:
+            return "high"
+
+        if score >= 35:
+            return "medium"
+
+        return "low"
+
+    def _build_money_leak_score_summary(
+        self,
+        *,
+        score: int,
+        leak_ratio: Decimal,
+        top_pattern: MoneyLeakPattern | None,
+    ) -> str:
+        if top_pattern is None:
+            return "No meaningful repeated money leaks were detected in this period."
+
+        label = top_pattern.description or top_pattern.category
+        risk_level = self._classify_money_leak_score(score)
+        return (
+            f"{label} is the strongest leak signal. Projected leaks are "
+            f"{leak_ratio}% of selected-period spending, placing this user at "
+            f"{risk_level} leak risk."
+        )
+
+    def _build_money_leak_score_action(
+        self,
+        *,
+        top_pattern: MoneyLeakPattern | None,
+    ) -> str:
+        if top_pattern is None:
+            return (
+                "Keep tracking expenses and review this score after more spending "
+                "history exists."
+            )
+
+        label = top_pattern.description or top_pattern.category
+        return f"Pause or cap {label} for seven days and move the saved amount into a goal."
+
+    def _build_money_leak_score_evidence(
+        self,
+        *,
+        leak_ratio: Decimal,
+        patterns: list[MoneyLeakPattern],
+        top_pattern: MoneyLeakPattern | None,
+    ) -> list[MoneyLeakScoreEvidence]:
+        evidence = [
+            MoneyLeakScoreEvidence(
+                name="projected_leak_ratio",
+                impact=35 if leak_ratio >= Decimal("20.00") else 15,
+                message=f"Projected monthly leaks equal {leak_ratio}% of selected-period spending.",
+            ),
+            MoneyLeakScoreEvidence(
+                name="pattern_count",
+                impact=min(len(patterns), 4) * 4,
+                message=f"{len(patterns)} repeated leak pattern(s) were detected.",
+            ),
+        ]
+
+        if top_pattern is not None:
+            label = top_pattern.description or top_pattern.category
+            evidence.append(
+                MoneyLeakScoreEvidence(
+                    name="top_leak_driver",
+                    impact=20 if top_pattern.leak_risk == "high" else 10,
+                    message=(
+                        f"{label} repeats {top_pattern.occurrence_count} times with "
+                        f"a projected monthly leak of {top_pattern.projected_monthly_leak}."
+                    ),
+                )
+            )
+
+        return evidence
 
     def _build_money_leak_reason(
         self,

@@ -13,6 +13,7 @@ from app.schemas.analytics import (
     FinancialBehaviorScore,
     MicroExpenseAnalysis,
     MoneyLeakAnalysis,
+    MoneyLeakScore,
     RepeatedSpendingAnalysis,
     SpendingSummary,
     SpendingTrendAnalysis,
@@ -162,6 +163,28 @@ async def detect_money_leaks(
         start_date=start_date,
         end_date=end_date,
         min_occurrences=min_occurrences,
+    )
+
+
+@router.get(
+    "/money-leak-score",
+    response_model=MoneyLeakScore,
+    summary="Calculate money leak score",
+    description="Return an explainable risk score for invisible recurring money leaks.",
+)
+async def calculate_money_leak_score(
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+) -> MoneyLeakScore:
+    _validate_date_range(start_date=start_date, end_date=end_date)
+
+    analytics_service = AnalyticsService(ExpenseRepository(db_session))
+    return await analytics_service.calculate_money_leak_score(
+        user_id=current_user.id,
+        start_date=start_date,
+        end_date=end_date,
     )
 
 

@@ -6,6 +6,7 @@ from app.schemas.alert import SpendingAlert
 from app.schemas.analytics import (
     FinancialBehaviorScore,
     MoneyLeakAnalysis,
+    MoneyLeakScore,
     SpendingSummary,
     SpendingTrendAnalysis,
 )
@@ -22,4 +23,5 @@ class DashboardResponse(BaseModel):
     behavior_score: FinancialBehaviorScore
     alerts: list[SpendingAlert]
     money_leaks: MoneyLeakAnalysis
+    money_leak_score: MoneyLeakScore
     goals: list[GoalRead]
