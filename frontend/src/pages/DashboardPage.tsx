@@ -70,6 +70,10 @@ export function DashboardPage() {
         value: `${dashboard.behavior_score.score}`,
       },
       {
+        label: "Leak risk",
+        value: `${dashboard.money_leak_score.score}/100`,
+      },
+      {
         label: "Active goals",
         value: `${dashboard.goals.filter((goal) => !goal.is_completed).length}`,
       },
@@ -138,6 +142,53 @@ export function DashboardPage() {
           </ul>
         </section>
       </div>
+
+      <section
+        className={`dashboard-panel money-leak-score-panel ${dashboard?.money_leak_score.risk_level ?? "low"}`}
+        aria-labelledby="money-leak-score-title"
+      >
+        <div className="panel-heading">
+          <div>
+            <p>Leak score</p>
+            <h2 id="money-leak-score-title">Invisible money leak risk</h2>
+          </div>
+          <span className="risk-pill">
+            {dashboard?.money_leak_score.risk_level ?? "low"} risk
+          </span>
+        </div>
+
+        {dashboard ? (
+          <div className="money-leak-score-grid">
+            <div className="money-leak-score-hero">
+              <span>Risk score</span>
+              <strong>{dashboard.money_leak_score.score}/100</strong>
+              <small>
+                {formatCurrency(dashboard.money_leak_score.projected_monthly_leak)} projected
+                monthly leak
+              </small>
+            </div>
+
+            <div className="money-leak-score-copy">
+              <p>{dashboard.money_leak_score.summary}</p>
+              <strong>{dashboard.money_leak_score.recommended_action}</strong>
+            </div>
+
+            <ul className="money-leak-evidence-list">
+              {dashboard.money_leak_score.evidence.slice(0, 3).map((item) => (
+                <li key={item.name}>
+                  <span>{item.impact > 0 ? `+${item.impact}` : item.impact}</span>
+                  <p>{item.message}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <StateMessage
+            description="Add repeated expenses to calculate leak risk."
+            title="No money leak score yet"
+          />
+        )}
+      </section>
 
       <div className="dashboard-grid lower">
         <section className="dashboard-panel" aria-labelledby="opportunities-title">

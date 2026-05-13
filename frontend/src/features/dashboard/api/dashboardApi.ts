@@ -9,6 +9,7 @@ export type DashboardResponse = {
   behavior_score: FinancialBehaviorScore;
   alerts: SpendingAlert[];
   money_leaks: MoneyLeakAnalysis;
+  money_leak_score: MoneyLeakScore;
   goals: Goal[];
 };
 
@@ -82,6 +83,26 @@ export type MoneyLeakAnalysis = {
   total_leak_amount: string;
   projected_monthly_leak: string;
   patterns: MoneyLeakPattern[];
+};
+
+export type MoneyLeakScore = {
+  start_date: string;
+  end_date: string;
+  score: number;
+  risk_level: "low" | "medium" | "high" | "critical";
+  projected_monthly_leak: string;
+  leak_ratio: string;
+  pattern_count: number;
+  top_leak_category: string | null;
+  summary: string;
+  recommended_action: string;
+  evidence: MoneyLeakScoreEvidence[];
+};
+
+export type MoneyLeakScoreEvidence = {
+  name: string;
+  impact: number;
+  message: string;
 };
 
 export type MoneyLeakPattern = {

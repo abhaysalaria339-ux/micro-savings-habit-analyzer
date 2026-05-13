@@ -663,6 +663,117 @@ textarea:focus-visible {
   font-weight: 900;
 }
 
+.money-leak-score-panel {
+  margin-top: 16px;
+}
+
+.money-leak-score-panel.low .risk-pill {
+  background: var(--color-savings-soft);
+  color: var(--color-savings);
+}
+
+.money-leak-score-panel.medium .risk-pill,
+.money-leak-score-panel.high .risk-pill {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.money-leak-score-panel.critical .risk-pill {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.risk-pill {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  text-transform: capitalize;
+}
+
+.money-leak-score-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.58fr) minmax(0, 1fr) minmax(260px, 0.85fr);
+  gap: 16px;
+}
+
+.money-leak-score-hero {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid rgba(180, 35, 24, 0.12);
+  border-radius: var(--radius-card);
+  background: var(--color-danger-soft);
+  padding: 16px;
+}
+
+.money-leak-score-hero span,
+.money-leak-score-hero small {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.money-leak-score-hero strong {
+  color: var(--color-danger);
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1;
+}
+
+.money-leak-score-copy {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.money-leak-score-copy p,
+.money-leak-score-copy strong {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.money-leak-score-copy p {
+  color: var(--color-text-muted);
+}
+
+.money-leak-score-copy strong {
+  color: var(--color-text);
+}
+
+.money-leak-evidence-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.money-leak-evidence-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  padding: 10px 12px;
+}
+
+.money-leak-evidence-list span {
+  color: var(--color-danger);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.money-leak-evidence-list p {
+  margin: 0;
+  color: #34403c;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .status-list,
 .insight-list,
 .alert-list,
@@ -1419,6 +1530,7 @@ textarea:focus-visible {
 
   .metric-grid,
   .dashboard-grid,
+  .money-leak-score-grid,
   .expenses-layout,
   .goals-layout,
   .insights-layout,
@@ -1535,6 +1647,7 @@ textarea:focus-visible {
   .metric-panel strong,
   .savings-summary-panel > strong,
   .simulation-hero strong,
+  .money-leak-score-hero strong,
   .ml-profile-summary > span {
     font-size: clamp(26px, 8vw, 32px);
   }
