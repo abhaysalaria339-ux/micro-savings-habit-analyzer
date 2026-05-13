@@ -90,6 +90,109 @@ Current expected result:
 19 passed
 ```
 
+## Seed Synthetic Demo Data
+
+Use this when you need realistic expense history for UI demos, analytics testing,
+or future ML feature engineering without waiting for real users.
+
+From the backend folder:
+
+```powershell
+.venv\Scripts\python scripts\seed_demo_data.py --users 10 --days 90
+```
+
+The script creates demo users with varied behavior profiles:
+
+- Saver
+- Neutral
+- Spender
+- Weekend spender
+- Micro-spender
+
+Demo login pattern:
+
+```text
+Email: demo.<profile>.<number>@example.local
+Password: DemoPass123!
+```
+
+Example:
+
+```text
+demo.saver.01@example.local
+demo.micro.05@example.local
+```
+
+If demo users already exist, replace them safely with:
+
+```powershell
+.venv\Scripts\python scripts\seed_demo_data.py --users 10 --days 90 --reset-demo-data
+```
+
+Safety notes:
+
+- The script only targets `demo.*@example.local` users.
+- It refuses to run in `APP_ENV=production` unless `--allow-production` is passed.
+- Run Alembic migrations before seeding.
+
+## ML Feature Engineering
+
+The project is ML-ready but does not train models yet. The first ML preparation
+module is:
+
+```text
+app/ml/features.py
+```
+
+It converts a user's expense history into a deterministic feature vector for
+future clustering, classification, and forecasting work. Example features include:
+
+- total spend
+- average transaction amount
+- active spending days
+- micro-expense ratio
+- repeated pattern count
+- category concentration
+- weekend spend ratio
+- food/snack spend ratio
+- subscription spend ratio
+- spending frequency
+- first-half vs second-half trend ratio
+
+This keeps ML work separate from API behavior until a model is intentionally added.
+
+## ML Spending Profile Prototype
+
+The first model-style capability is an explainable spending profile clustering
+prototype:
+
+```text
+GET /api/v1/ml/spending-profile?analysis_days=90
+```
+
+It uses the ML feature vector to assign one profile:
+
+- Saver
+- Neutral
+- Spender
+- Weekend Spender
+- Micro-Spender
+- Insufficient data
+
+This prototype is dependency-free and does not train on request. It compares the
+user's feature vector against stable profile centroids, then returns:
+
+- profile id
+- profile label
+- confidence
+- summary
+- reasons
+- recommendations
+- feature snapshot
+
+This is enough to validate the ML pipeline and demo behavior before adding
+heavier libraries or trained models.
+
 ## Docker Runtime
 
 Build the backend image from the backend folder:

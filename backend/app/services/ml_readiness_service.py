@@ -5,7 +5,7 @@ from app.schemas.ml import MLReadinessResponse
 class MLReadinessService:
     def get_readiness(self) -> MLReadinessResponse:
         return MLReadinessResponse(
-            ml_enabled=False,
-            model_execution_available=False,
+            ml_enabled=True,
+            model_execution_available=True,
             capabilities=get_planned_ml_capabilities(),
         )

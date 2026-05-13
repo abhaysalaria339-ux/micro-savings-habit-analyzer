@@ -5,7 +5,7 @@ def get_planned_ml_capabilities() -> list[MLCapability]:
     return [
         MLCapability(
             problem_type="clustering",
-            status="planned",
+            status="available",
             description="Group users or spending patterns by behavior similarity.",
             required_feature_groups=[
                 "category_spending",
