@@ -1113,6 +1113,108 @@ textarea:focus-visible {
   font-size: 22px;
 }
 
+.ml-profile-panel {
+  margin-bottom: 16px;
+}
+
+.confidence-pill {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+}
+
+.ml-profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+  gap: 16px;
+}
+
+.ml-profile-summary {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-radius: var(--radius-card);
+  background: var(--color-primary-soft);
+  padding: 16px;
+}
+
+.ml-profile-summary > span {
+  color: var(--color-primary);
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+.ml-profile-summary p,
+.ml-profile-summary small {
+  margin: 0;
+  color: #3f4a46;
+  line-height: 1.5;
+}
+
+.ml-profile-summary small {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ml-signal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ml-signal-grid article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  padding: 12px;
+}
+
+.ml-signal-grid span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.ml-signal-grid strong {
+  color: var(--color-text);
+  font-size: 22px;
+}
+
+.ml-profile-grid h3 {
+  margin: 0 0 10px;
+  color: var(--color-text);
+  font-size: 15px;
+}
+
+.ml-profile-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ml-profile-list li {
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  color: #34403c;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
+  padding: 11px 12px;
+}
+
 .empty-list-item {
   color: var(--color-text-muted);
   font-weight: 800;
@@ -1296,6 +1398,7 @@ textarea:focus-visible {
   .goals-layout,
   .insights-layout,
   .recommendation-list li,
+  .ml-profile-grid,
   .simulator-layout,
   .simulation-result-grid {
     grid-template-columns: 1fr;
@@ -1386,6 +1489,10 @@ textarea:focus-visible {
 
   .preset-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ml-signal-grid {
+    grid-template-columns: 1fr;
   }
 
   .expense-meta {

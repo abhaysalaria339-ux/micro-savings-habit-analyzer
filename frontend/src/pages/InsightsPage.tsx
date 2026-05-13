@@ -10,6 +10,10 @@ import {
   SavingsInsightsResponse,
   SpendingAlertsResponse,
 } from "../features/insights/api/insightApi";
+import {
+  getSpendingProfile,
+  MLSpendingProfileResponse,
+} from "../features/ml/api/mlApi";
 
 type InsightPeriod = "weekly" | "monthly";
 
@@ -17,6 +21,8 @@ export function InsightsPage() {
   const [period, setPeriod] = useState<InsightPeriod>("monthly");
   const [insights, setInsights] = useState<SavingsInsightsResponse | null>(null);
   const [alerts, setAlerts] = useState<SpendingAlertsResponse | null>(null);
+  const [spendingProfile, setSpendingProfile] =
+    useState<MLSpendingProfileResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -29,14 +35,16 @@ export function InsightsPage() {
       setError(null);
 
       try {
-        const [insightResponse, alertResponse] = await Promise.all([
+        const [insightResponse, alertResponse, profileResponse] = await Promise.all([
           getSavingsInsights(period),
           getSpendingAlerts(),
+          getSpendingProfile(),
         ]);
 
         if (!ignore) {
           setInsights(insightResponse);
           setAlerts(alertResponse);
+          setSpendingProfile(profileResponse);
         }
       } catch (caughtError) {
         if (!ignore) {
@@ -139,6 +147,73 @@ export function InsightsPage() {
         </section>
       </div>
 
+      <section className="dashboard-panel ml-profile-panel" aria-labelledby="ml-profile-heading">
+        <div className="panel-heading">
+          <div>
+            <p>ML profile</p>
+            <h2 id="ml-profile-heading">Spending behavior cluster</h2>
+          </div>
+          {spendingProfile ? (
+            <span className="confidence-pill">
+              {formatPercent(spendingProfile.confidence)} confidence
+            </span>
+          ) : null}
+        </div>
+
+        {spendingProfile ? (
+          <div className="ml-profile-grid">
+            <div className="ml-profile-summary">
+              <span>{spendingProfile.profile_label}</span>
+              <p>{spendingProfile.summary}</p>
+              <small>
+                Based on {spendingProfile.transaction_count} expenses from the last{" "}
+                {spendingProfile.analysis_days} days.
+              </small>
+            </div>
+
+            <div className="ml-signal-grid" aria-label="Profile signals">
+              <article>
+                <span>Micro-expense ratio</span>
+                <strong>{formatPercent(spendingProfile.features.micro_expense_ratio)}</strong>
+              </article>
+              <article>
+                <span>Weekend spend</span>
+                <strong>{formatPercent(spendingProfile.features.weekend_spend_ratio)}</strong>
+              </article>
+              <article>
+                <span>Food and snacks</span>
+                <strong>
+                  {formatPercent(spendingProfile.features.food_and_snack_spend_ratio)}
+                </strong>
+              </article>
+            </div>
+
+            <div>
+              <h3>Why this profile</h3>
+              <ul className="ml-profile-list">
+                {spendingProfile.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3>Next actions</h3>
+              <ul className="ml-profile-list">
+                {spendingProfile.recommendations.map((recommendation) => (
+                  <li key={recommendation}>{recommendation}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : (
+          <StateMessage
+            description="Add more expenses to generate a spending behavior cluster."
+            title="No ML profile yet"
+          />
+        )}
+      </section>
+
       <section className="dashboard-panel insights-panel" aria-labelledby="recommendations-heading">
         <div className="panel-heading">
           <div>
@@ -179,6 +254,10 @@ function formatInsightType(type: string): string {
     .split("_")
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function formatPercent(value: string): string {
+  return `${(Number(value) * 100).toFixed(0)}%`;
 }
 
 function toInsightErrorMessage(error: unknown): string {
