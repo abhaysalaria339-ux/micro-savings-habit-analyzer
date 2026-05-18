@@ -479,11 +479,11 @@ function getTrendPalette(amount: number, averageAmount: number): {
   glow: string;
 } {
   if (amount <= averageAmount * 0.75) {
-    return { color: "#12805c", glow: "#dff7ec" };
+    return { color: "#d70015", glow: "#dff7ec" };
   }
 
   if (amount <= averageAmount * 1.15) {
-    return { color: "#2f6f68", glow: "#def4f2" };
+    return { color: "#ff453a", glow: "#def4f2" };
   }
 
   if (amount <= averageAmount * 1.5) {
