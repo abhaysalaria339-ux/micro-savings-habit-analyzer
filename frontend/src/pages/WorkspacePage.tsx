@@ -1,4 +1,11 @@
-import { ComponentType, useEffect, useMemo, useState } from "react";
+import {
+  ComponentType,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useLocation } from "react-router-dom";
 
 import { AdvancedPage } from "./AdvancedPage";
@@ -36,48 +43,79 @@ const workspaceSections: WorkspaceSection[] = workspaceSectionConfig.map((sectio
 export function WorkspacePage() {
   const location = useLocation();
   const [activeSectionId, setActiveSectionId] = useState(workspaceSections[0].id);
+  const activeSectionRef = useRef(workspaceSections[0].id);
 
   const sectionIds = useMemo(
     () => workspaceSections.map((section) => section.id),
     [],
   );
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((first, second) => second.intersectionRatio - first.intersectionRatio)[0];
-
-        if (!visibleEntry) {
-          return;
-        }
-
-        const nextSectionId = visibleEntry.target.id;
-        setActiveSectionId(nextSectionId);
-        window.dispatchEvent(
-          new CustomEvent(workspaceSectionChangeEvent, {
-            detail: nextSectionId,
-          }),
-        );
-      },
-      {
-        rootMargin: "-28% 0px -52% 0px",
-        threshold: [0.12, 0.25, 0.45, 0.65],
-      },
-    );
-
-    for (const sectionId of sectionIds) {
-      const section = document.getElementById(sectionId);
-      if (section) {
-        observer.observe(section);
-      }
+  const publishActiveSection = useCallback((sectionId: string) => {
+    if (activeSectionRef.current === sectionId) {
+      return;
     }
 
+    activeSectionRef.current = sectionId;
+    setActiveSectionId(sectionId);
+    window.dispatchEvent(
+      new CustomEvent(workspaceSectionChangeEvent, {
+        detail: sectionId,
+      }),
+    );
+  }, []);
+
+  useEffect(() => {
+    let animationFrameId: number | null = null;
+
+    function updateActiveSection() {
+      animationFrameId = null;
+
+      const anchorY = Math.min(window.innerHeight * 0.36, 280);
+      let nextSectionId = activeSectionRef.current;
+      let bestDistance = Number.POSITIVE_INFINITY;
+
+      for (const sectionId of sectionIds) {
+        const section = document.getElementById(sectionId);
+        if (!section) {
+          continue;
+        }
+
+        const rect = section.getBoundingClientRect();
+        const isAnchorInsideSection = rect.top <= anchorY && rect.bottom >= anchorY;
+        const distance = isAnchorInsideSection
+          ? 0
+          : Math.min(Math.abs(rect.top - anchorY), Math.abs(rect.bottom - anchorY));
+
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          nextSectionId = sectionId;
+        }
+      }
+
+      publishActiveSection(nextSectionId);
+    }
+
+    function scheduleActiveSectionUpdate() {
+      if (animationFrameId !== null) {
+        return;
+      }
+
+      animationFrameId = window.requestAnimationFrame(updateActiveSection);
+    }
+
+    scheduleActiveSectionUpdate();
+    window.addEventListener("scroll", scheduleActiveSectionUpdate, { passive: true });
+    window.addEventListener("resize", scheduleActiveSectionUpdate);
+
     return () => {
-      observer.disconnect();
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+
+      window.removeEventListener("scroll", scheduleActiveSectionUpdate);
+      window.removeEventListener("resize", scheduleActiveSectionUpdate);
     };
-  }, [sectionIds]);
+  }, [publishActiveSection, sectionIds]);
 
   useEffect(() => {
     if (!location.hash) {
@@ -94,8 +132,9 @@ export function WorkspacePage() {
         behavior: prefersReducedMotion() ? "auto" : "smooth",
         block: "start",
       });
+      publishActiveSection(section.id);
     });
-  }, [location.hash]);
+  }, [location.hash, publishActiveSection]);
 
   return (
     <div className="continuous-workspace" aria-label="Continuous finance workspace">
