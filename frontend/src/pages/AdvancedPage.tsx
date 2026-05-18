@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ErrorMessage } from "../components/ErrorMessage";
+import { ScrollSyncedInsightTabs } from "../components/ScrollSyncedInsightTabs";
 import { StateMessage } from "../components/StateMessage";
 import {
   AdvancedIntelligenceResponse,
@@ -10,6 +11,15 @@ import { ApiError } from "../lib/api/apiError";
 import { formatCurrency } from "../lib/formatters";
 
 const analysisOptions = [30, 90, 180] as const;
+
+const insightTabs = [
+  { id: "advanced-overview", label: "Overview", meta: "01" },
+  { id: "advanced-report", label: "Health check", meta: "02" },
+  { id: "advanced-rhythm", label: "Rhythm", meta: "03" },
+  { id: "advanced-coach", label: "Coach", meta: "04" },
+  { id: "advanced-recurring", label: "Recurring", meta: "05" },
+  { id: "advanced-anomalies", label: "Anomalies", meta: "06" },
+];
 
 export function AdvancedPage() {
   const [analysisDays, setAnalysisDays] = useState<(typeof analysisOptions)[number]>(90);
@@ -93,7 +103,15 @@ export function AdvancedPage() {
 
       {intelligence ? (
         <>
-          <div className="metric-grid advanced-metric-grid">
+          <ScrollSyncedInsightTabs
+            ariaLabel="Advanced insight sections"
+            tabs={insightTabs}
+          />
+
+          <div
+            className="metric-grid advanced-metric-grid scroll-sync-section"
+            id="advanced-overview"
+          >
             <article className="metric-panel">
               <span>Weekly spend</span>
               <strong>{formatCurrency(intelligence.weekly_report.total_spend)}</strong>
@@ -114,7 +132,10 @@ export function AdvancedPage() {
             </article>
           </div>
 
-          <section className="dashboard-panel advanced-report-panel">
+          <section
+            className="dashboard-panel advanced-report-panel scroll-sync-section"
+            id="advanced-report"
+          >
             <div className="panel-heading">
               <div>
                 <p>Weekly report</p>
@@ -131,7 +152,11 @@ export function AdvancedPage() {
           </section>
 
           <div className="advanced-grid">
-            <section className="dashboard-panel" aria-labelledby="heatmap-heading">
+            <section
+              className="dashboard-panel scroll-sync-section"
+              id="advanced-rhythm"
+              aria-labelledby="heatmap-heading"
+            >
               <div className="panel-heading">
                 <div>
                   <p>Calendar heatmap</p>
@@ -164,7 +189,11 @@ export function AdvancedPage() {
               </div>
             </section>
 
-            <section className="dashboard-panel" aria-labelledby="coach-heading">
+            <section
+              className="dashboard-panel scroll-sync-section"
+              id="advanced-coach"
+              aria-labelledby="coach-heading"
+            >
               <div className="panel-heading">
                 <div>
                   <p>Habit coach</p>
@@ -190,7 +219,11 @@ export function AdvancedPage() {
           </div>
 
           <div className="advanced-grid">
-            <section className="dashboard-panel" aria-labelledby="recurring-heading">
+            <section
+              className="dashboard-panel scroll-sync-section"
+              id="advanced-recurring"
+              aria-labelledby="recurring-heading"
+            >
               <div className="panel-heading">
                 <div>
                   <p>Recurring candidates</p>
@@ -231,7 +264,11 @@ export function AdvancedPage() {
               </ul>
             </section>
 
-            <section className="dashboard-panel" aria-labelledby="anomaly-heading">
+            <section
+              className="dashboard-panel scroll-sync-section"
+              id="advanced-anomalies"
+              aria-labelledby="anomaly-heading"
+            >
               <div className="panel-heading">
                 <div>
                   <p>Anomaly signals</p>

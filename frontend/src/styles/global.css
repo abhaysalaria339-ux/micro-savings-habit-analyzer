@@ -1754,6 +1754,118 @@ textarea:focus-visible {
   color: var(--color-savings);
 }
 
+.scroll-sync-tabs {
+  position: sticky;
+  z-index: 6;
+  top: 92px;
+  margin: 0 0 16px;
+  perspective: 900px;
+}
+
+.scroll-sync-tabs-track {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 6px;
+  box-shadow: var(--shadow-soft);
+  list-style: none;
+  backdrop-filter: blur(18px);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-sync-tabs-track::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-sync-tabs-track li {
+  display: flex;
+  flex: 1 0 auto;
+  min-width: 128px;
+}
+
+.scroll-sync-tab-button {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 54px;
+  align-content: center;
+  gap: 3px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 8px 12px;
+  text-align: left;
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+  transition:
+    transform var(--transition-smooth),
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.scroll-sync-tab-button::before {
+  position: absolute;
+  inset: auto 12px 6px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  content: "";
+  opacity: 0;
+  transform: scaleX(0.45);
+  transform-origin: left;
+  transition:
+    opacity var(--transition-fast),
+    transform var(--transition-smooth);
+}
+
+.scroll-sync-tab-button span {
+  color: var(--color-text-soft);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.scroll-sync-tab-button strong {
+  color: inherit;
+  font-size: 13px;
+  line-height: 1.15;
+}
+
+.scroll-sync-tab-button:hover {
+  border-color: rgba(37, 99, 235, 0.14);
+  background: rgba(239, 246, 255, 0.68);
+  color: var(--color-primary);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px) rotateX(4deg);
+}
+
+.scroll-sync-tab-button.active {
+  border-color: rgba(37, 99, 235, 0.18);
+  background: var(--color-surface-solid);
+  color: var(--color-primary);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.12);
+  transform: translateY(-2px) rotateX(6deg) scale(1.01);
+}
+
+.scroll-sync-tab-button.active::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.scroll-sync-section {
+  scroll-margin-top: 176px;
+}
+
 .advanced-report-panel {
   display: grid;
   gap: 10px;
@@ -2129,6 +2241,10 @@ textarea:focus-visible {
     display: none;
   }
 
+  .scroll-sync-tabs {
+    top: 12px;
+  }
+
   .app-credit {
     margin-top: 12px;
   }
@@ -2379,6 +2495,30 @@ textarea:focus-visible {
     gap: 6px;
   }
 
+  .scroll-sync-tabs {
+    position: sticky;
+    top: 8px;
+    margin-bottom: 12px;
+  }
+
+  .scroll-sync-tabs-track {
+    margin-right: -14px;
+    padding-right: 14px;
+  }
+
+  .scroll-sync-tab-button {
+    min-width: 0;
+  }
+
+  .scroll-sync-tabs-track li {
+    min-width: 122px;
+    flex: 0 0 122px;
+  }
+
+  .scroll-sync-section {
+    scroll-margin-top: 96px;
+  }
+
   .coach-card,
   .recurring-card,
   .anomaly-card {
@@ -2436,5 +2576,11 @@ textarea:focus-visible {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+
+  .scroll-sync-tab-button,
+  .scroll-sync-tab-button:hover,
+  .scroll-sync-tab-button.active {
+    transform: none;
   }
 }
