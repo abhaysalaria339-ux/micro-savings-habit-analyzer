@@ -479,18 +479,18 @@ function getTrendPalette(amount: number, averageAmount: number): {
   glow: string;
 } {
   if (amount <= averageAmount * 0.75) {
-    return { color: "#d70015", glow: "#fbb4bbff" };
+    return { color: "#34c759", glow: "#49fa76ff" };
   }
 
   if (amount <= averageAmount * 1.15) {
-    return { color: "#ff453a", glow: "#fca19cff" };
+    return { color: "#ffcc00", glow: "#fdd948ff" };
   }
 
   if (amount <= averageAmount * 1.5) {
-    return { color: "#b46f08", glow: "#f3deb0ff" };
+    return { color: "#ff9500", glow: "#feae3dff" };
   }
 
-  return { color: "#b42318", glow: "#f7c8c0ff" };
+  return { color: "#ff3b30", glow: "#fb8983ff" };
 }
 
 function toTrendChartType(value: string): TrendChartType {
