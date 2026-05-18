@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 
 import { ApiError } from "../lib/api/apiError";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -11,11 +12,25 @@ import {
   SpendingTrendPoint,
 } from "../features/dashboard/api/dashboardApi";
 
+const trendChartTypeOptions = ["bar", "line", "area"] as const;
+type TrendChartType = (typeof trendChartTypeOptions)[number];
+
+const trendChartTypeLabels: Record<TrendChartType, string> = {
+  area: "Area",
+  bar: "Bar",
+  line: "Line",
+};
+
+const trendChartPreferenceKey = "dashboard-trend-chart-type";
+
 export function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [trendChartType, setTrendChartType] = useState<TrendChartType>(
+    getInitialTrendChartType,
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -46,6 +61,10 @@ export function DashboardPage() {
       ignore = true;
     };
   }, [reloadKey]);
+
+  useEffect(() => {
+    window.localStorage.setItem(trendChartPreferenceKey, trendChartType);
+  }, [trendChartType]);
 
   const summaryItems = useMemo(() => {
     if (!dashboard) {
@@ -121,8 +140,27 @@ export function DashboardPage() {
               <p>Trend</p>
               <h2 id="trend-title">Spending trends</h2>
             </div>
+            <label className="chart-type-control" htmlFor="trend-chart-type">
+              <span>Chart</span>
+              <select
+                id="trend-chart-type"
+                onChange={(event) =>
+                  setTrendChartType(toTrendChartType(event.target.value))
+                }
+                value={trendChartType}
+              >
+                {trendChartTypeOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {trendChartTypeLabels[option]}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
-          <TrendBars points={dashboard?.spending_trends.points ?? []} />
+          <TrendChart
+            chartType={trendChartType}
+            points={dashboard?.spending_trends.points ?? []}
+          />
         </section>
 
         <section className="dashboard-panel" aria-labelledby="behavior-title">
@@ -280,9 +318,21 @@ function HabitTimeline({ events }: { events: HabitTimelineEvent[] }) {
   );
 }
 
-function TrendBars({ points }: { points: SpendingTrendPoint[] }) {
-  const maxAmount = Math.max(...points.map((point) => Number(point.total_amount)), 1);
+function TrendChart({
+  chartType,
+  points,
+}: {
+  chartType: TrendChartType;
+  points: SpendingTrendPoint[];
+}) {
   const visiblePoints = points.slice(-8);
+  const maxAmount = Math.max(
+    ...visiblePoints.map((point) => Number(point.total_amount)),
+    1,
+  );
+  const averageAmount =
+    visiblePoints.reduce((total, point) => total + Number(point.total_amount), 0) /
+    Math.max(visiblePoints.length, 1);
 
   if (visiblePoints.length === 0) {
     return (
@@ -293,12 +343,39 @@ function TrendBars({ points }: { points: SpendingTrendPoint[] }) {
     );
   }
 
+  if (chartType === "line" || chartType === "area") {
+    return (
+      <TrendLineChart
+        averageAmount={averageAmount}
+        chartType={chartType}
+        maxAmount={maxAmount}
+        points={visiblePoints}
+      />
+    );
+  }
+
   return (
-    <div className="trend-bars" aria-label="Spending trend chart">
+    <div
+      className="trend-bars trend-chart"
+      aria-label="Spending trend bar chart"
+      style={{ "--trend-point-count": visiblePoints.length } as CSSProperties}
+    >
       {visiblePoints.map((point) => {
-        const height = Math.max(12, (Number(point.total_amount) / maxAmount) * 100);
+        const amount = Number(point.total_amount);
+        const height = Math.max(12, (amount / maxAmount) * 100);
+        const palette = getTrendPalette(amount, averageAmount);
         return (
-          <div className="trend-bar-item" key={point.period_start}>
+          <div
+            aria-label={`${formatShortDate(point.period_start)} ${formatCurrency(point.total_amount)}`}
+            className="trend-bar-item"
+            key={point.period_start}
+            style={
+              {
+                "--chart-point-color": palette.color,
+                "--chart-point-glow": palette.glow,
+              } as CSSProperties
+            }
+          >
             <span style={{ height: `${height}%` }} />
             <small>{formatShortDate(point.period_start)}</small>
           </div>
@@ -306,6 +383,124 @@ function TrendBars({ points }: { points: SpendingTrendPoint[] }) {
       })}
     </div>
   );
+}
+
+function TrendLineChart({
+  averageAmount,
+  chartType,
+  maxAmount,
+  points,
+}: {
+  averageAmount: number;
+  chartType: Extract<TrendChartType, "area" | "line">;
+  maxAmount: number;
+  points: SpendingTrendPoint[];
+}) {
+  const chartWidth = 360;
+  const chartHeight = 190;
+  const chartLeft = 18;
+  const chartRight = chartWidth - 18;
+  const chartTop = 18;
+  const chartBottom = 150;
+  const chartRange = chartBottom - chartTop;
+  const step = points.length > 1 ? (chartRight - chartLeft) / (points.length - 1) : 0;
+
+  const renderedPoints = points.map((point, index) => {
+    const amount = Number(point.total_amount);
+    const palette = getTrendPalette(amount, averageAmount);
+    const x = points.length === 1 ? chartWidth / 2 : chartLeft + step * index;
+    const y = chartBottom - (amount / maxAmount) * chartRange;
+
+    return {
+      amount,
+      color: palette.color,
+      glow: palette.glow,
+      key: point.period_start,
+      label: formatShortDate(point.period_start),
+      x,
+      y,
+    };
+  });
+
+  const linePath = renderedPoints
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+  const areaPath =
+    renderedPoints.length > 1
+      ? `${linePath} L ${renderedPoints[renderedPoints.length - 1].x} ${chartBottom} L ${renderedPoints[0].x} ${chartBottom} Z`
+      : "";
+
+  return (
+    <div
+      className={`trend-line-chart trend-chart ${chartType}`}
+      aria-label={`Spending trend ${chartType} chart`}
+    >
+      <svg
+        aria-hidden="true"
+        className="trend-svg"
+        focusable="false"
+        preserveAspectRatio="none"
+        viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+      >
+        <line className="trend-grid-line" x1="18" x2="342" y1="150" y2="150" />
+        <line className="trend-grid-line soft" x1="18" x2="342" y1="84" y2="84" />
+        {chartType === "area" && areaPath ? (
+          <path className="trend-area-fill" d={areaPath} />
+        ) : null}
+        <path className="trend-line-path" d={linePath} />
+        {renderedPoints.map((point) => (
+          <circle
+            className="trend-point"
+            cx={point.x}
+            cy={point.y}
+            fill={point.color}
+            key={point.key}
+            r="4.5"
+          />
+        ))}
+      </svg>
+      <div
+        className="trend-line-labels"
+        style={{ "--trend-point-count": points.length } as CSSProperties}
+      >
+        {renderedPoints.map((point) => (
+          <span key={point.key}>
+            <small>{point.label}</small>
+            <strong>{formatCurrency(point.amount)}</strong>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getTrendPalette(amount: number, averageAmount: number): {
+  color: string;
+  glow: string;
+} {
+  if (amount <= averageAmount * 0.75) {
+    return { color: "#12805c", glow: "#dff7ec" };
+  }
+
+  if (amount <= averageAmount * 1.15) {
+    return { color: "#2f6f68", glow: "#def4f2" };
+  }
+
+  if (amount <= averageAmount * 1.5) {
+    return { color: "#b46f08", glow: "#fff0cf" };
+  }
+
+  return { color: "#b42318", glow: "#ffe4df" };
+}
+
+function toTrendChartType(value: string): TrendChartType {
+  return trendChartTypeOptions.includes(value as TrendChartType)
+    ? (value as TrendChartType)
+    : "bar";
+}
+
+function getInitialTrendChartType(): TrendChartType {
+  return toTrendChartType(window.localStorage.getItem(trendChartPreferenceKey) ?? "bar");
 }
 
 function sumSavings(insights: DashboardResponse["savings_opportunities"]): string {

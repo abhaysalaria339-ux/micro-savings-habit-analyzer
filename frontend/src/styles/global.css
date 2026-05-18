@@ -750,11 +750,53 @@ textarea:focus-visible {
   margin-bottom: 18px;
 }
 
+.chart-type-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.chart-type-control span {
+  color: var(--color-text-soft);
+}
+
+.chart-type-control select {
+  min-height: 38px;
+  width: auto;
+  min-width: 104px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 850;
+  padding: 0 34px 0 12px;
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.chart-type-control select:focus-visible {
+  border-color: rgba(37, 99, 235, 0.34);
+  box-shadow: var(--shadow-focus);
+  outline: none;
+}
+
+.trend-chart {
+  min-height: 240px;
+}
+
 .trend-bars {
   display: grid;
   height: 240px;
   align-items: end;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--trend-point-count, 8), minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -769,7 +811,12 @@ textarea:focus-visible {
   display: block;
   min-height: 12px;
   border-radius: 8px 8px 0 0;
-  background: linear-gradient(180deg, #4f8df7, var(--color-primary));
+  background: linear-gradient(
+    180deg,
+    var(--chart-point-glow, #def4f2),
+    var(--chart-point-color, #2f6f68)
+  );
+  box-shadow: 0 14px 28px rgba(47, 111, 104, 0.16);
   animation: grow-up 520ms var(--transition-smooth) both;
   transform-origin: bottom;
 }
@@ -779,6 +826,75 @@ textarea:focus-visible {
   font-size: 11px;
   font-weight: 800;
   text-align: center;
+}
+
+.trend-line-chart {
+  display: grid;
+  gap: 10px;
+}
+
+.trend-svg {
+  display: block;
+  width: 100%;
+  height: 190px;
+  overflow: visible;
+}
+
+.trend-grid-line {
+  stroke: rgba(91, 104, 99, 0.16);
+  stroke-linecap: round;
+  stroke-width: 1;
+}
+
+.trend-grid-line.soft {
+  stroke-dasharray: 5 7;
+  opacity: 0.7;
+}
+
+.trend-line-path {
+  fill: none;
+  stroke: #2f6f68;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+  filter: drop-shadow(0 10px 18px rgba(47, 111, 104, 0.12));
+}
+
+.trend-area-fill {
+  fill: rgba(18, 128, 92, 0.13);
+}
+
+.trend-point {
+  stroke: var(--color-surface-solid);
+  stroke-width: 3;
+}
+
+.trend-line-labels {
+  display: grid;
+  grid-template-columns: repeat(var(--trend-point-count, 8), minmax(0, 1fr));
+  gap: 8px;
+}
+
+.trend-line-labels span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+}
+
+.trend-line-labels small {
+  color: var(--color-text-soft);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.trend-line-labels strong {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .behavior-score {
@@ -2298,8 +2414,25 @@ textarea:focus-visible {
   background: rgba(33, 44, 39, 0.96);
 }
 
-[data-theme="dark"] .trend-bar-item span {
-  background: linear-gradient(180deg, #8fb6ff, #5b89ee);
+[data-theme="dark"] .chart-type-control select {
+  background: rgba(22, 30, 27, 0.82);
+}
+
+[data-theme="dark"] .trend-grid-line {
+  stroke: rgba(237, 243, 241, 0.14);
+}
+
+[data-theme="dark"] .trend-line-path {
+  stroke: #75c7bd;
+  filter: drop-shadow(0 10px 18px rgba(117, 199, 189, 0.12));
+}
+
+[data-theme="dark"] .trend-area-fill {
+  fill: rgba(117, 199, 189, 0.14);
+}
+
+[data-theme="dark"] .trend-point {
+  stroke: #16201d;
 }
 
 [data-theme="dark"] .goal-progress-track,
