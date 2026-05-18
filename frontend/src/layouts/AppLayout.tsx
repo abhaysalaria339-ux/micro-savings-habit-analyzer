@@ -9,7 +9,9 @@ const navigationItems = [
   { label: "Dashboard", to: "/dashboard" },
   { label: "Expenses", to: "/expenses" },
   { label: "Goals", to: "/goals" },
+  { label: "Budgets", to: "/budgets" },
   { label: "Insights", to: "/insights" },
+  { label: "Advanced", to: "/advanced" },
   { label: "Simulator", to: "/simulator" },
 ];
 

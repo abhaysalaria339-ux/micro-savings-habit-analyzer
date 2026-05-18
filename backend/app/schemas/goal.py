@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -32,3 +33,15 @@ class GoalRead(BaseModel):
     is_completed: bool
     created_at: datetime
     updated_at: datetime
+
+
+class GoalSuggestion(BaseModel):
+    suggestion_type: Literal["money_leak", "micro_savings", "category_cap"]
+    title: str
+    message: str
+    suggested_amount: Decimal
+    confidence: Literal["low", "medium", "high"]
+
+
+class GoalSuggestionsResponse(BaseModel):
+    suggestions: list[GoalSuggestion]

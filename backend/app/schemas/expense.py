@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -48,3 +48,26 @@ class ExpenseListResponse(BaseModel):
     limit: int = Field(ge=1, le=MAX_PAGE_LIMIT)
     offset: int = Field(ge=0, le=MAX_PAGE_OFFSET)
     has_more: bool
+
+
+class ExpenseImportRequest(BaseModel):
+    csv_content: str = Field(min_length=1, max_length=500_000)
+
+
+class ExpenseImportRowResult(BaseModel):
+    row_number: int
+    status: Literal["imported", "failed", "skipped_duplicate", "skipped_credit"]
+    error: str | None = None
+    expense: ExpenseRead | None = None
+
+
+class ExpenseImportResponse(BaseModel):
+    imported_count: int
+    failed_count: int
+    skipped_count: int = 0
+    results: list[ExpenseImportRowResult]
+
+
+class ExpenseDuplicateCheckResponse(BaseModel):
+    has_duplicates: bool
+    matches: list[ExpenseRead]

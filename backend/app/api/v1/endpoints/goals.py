@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import get_current_active_user
 from app.db.session import get_db_session
 from app.models.user import User
+from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.goal_repository import GoalRepository
-from app.schemas.goal import GoalCreate, GoalProgressUpdate, GoalRead
+from app.schemas.goal import GoalCreate, GoalProgressUpdate, GoalRead, GoalSuggestionsResponse
 from app.services.goal_service import GoalNotFoundError, GoalService
 
 router = APIRouter()
@@ -60,6 +61,24 @@ async def list_goals(
         user_id=current_user.id,
         is_completed=is_completed,
     )
+
+
+@router.get(
+    "/suggestions",
+    response_model=GoalSuggestionsResponse,
+    summary="Suggest savings goals",
+    description="Suggest goal amounts from current savings opportunities.",
+)
+async def suggest_goals(
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+) -> GoalSuggestionsResponse:
+    goal_service = GoalService(
+        GoalRepository(db_session),
+        ExpenseRepository(db_session),
+    )
+    suggestions = await goal_service.suggest_goals(user_id=current_user.id)
+    return GoalSuggestionsResponse(suggestions=suggestions)
 
 
 @router.patch(

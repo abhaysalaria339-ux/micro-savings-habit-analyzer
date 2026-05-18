@@ -4,6 +4,8 @@ import { RedirectIfAuthenticated } from "../features/auth/components/RedirectIfA
 import { RequireAuth } from "../features/auth/components/RequireAuth";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { AppLayout } from "../layouts/AppLayout";
+import { AdvancedPage } from "../pages/AdvancedPage";
+import { BudgetsPage } from "../pages/BudgetsPage";
 import { DashboardPage } from "../pages/DashboardPage";
 import { ExpensesPage } from "../pages/ExpensesPage";
 import { GoalsPage } from "../pages/GoalsPage";
@@ -56,8 +58,16 @@ export const router = createBrowserRouter([
         element: <GoalsPage />,
       },
       {
+        path: "budgets",
+        element: <BudgetsPage />,
+      },
+      {
         path: "insights",
         element: <InsightsPage />,
+      },
+      {
+        path: "advanced",
+        element: <AdvancedPage />,
       },
       {
         path: "simulator",

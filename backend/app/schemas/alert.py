@@ -11,6 +11,7 @@ class SpendingAlert(BaseModel):
         "repeated_spending",
         "weekend_spending",
         "behavior_score",
+        "budget_breach",
     ]
     severity: Literal["info", "warning", "critical"]
     title: str

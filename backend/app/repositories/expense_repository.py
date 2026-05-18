@@ -94,6 +94,29 @@ class ExpenseRepository:
         )
         return result.scalar_one_or_none()
 
+    async def find_potential_duplicates(
+        self,
+        *,
+        user_id: UUID,
+        amount: Decimal,
+        category: str,
+        spent_at: datetime,
+        description: str | None = None,
+    ) -> list[Expense]:
+        query = select(Expense).where(
+            Expense.user_id == user_id,
+            Expense.amount == amount,
+            Expense.category == category.strip(),
+            func.date(Expense.spent_at) == spent_at.date(),
+        )
+
+        if description:
+            query = query.where(Expense.description == description.strip())
+
+        query = query.order_by(Expense.spent_at.desc()).limit(5)
+        result = await self.db_session.execute(query)
+        return list(result.scalars().all())
+
     async def update(
         self,
         *,

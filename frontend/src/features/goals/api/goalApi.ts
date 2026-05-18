@@ -13,6 +13,18 @@ export type Goal = {
   updated_at: string;
 };
 
+export type GoalSuggestion = {
+  suggestion_type: "money_leak" | "micro_savings" | "category_cap";
+  title: string;
+  message: string;
+  suggested_amount: string;
+  confidence: "low" | "medium" | "high";
+};
+
+export type GoalSuggestionsResponse = {
+  suggestions: GoalSuggestion[];
+};
+
 export type CreateGoalPayload = {
   name: string;
   target_amount: string;
@@ -40,6 +52,10 @@ export function listGoals(isCompleted?: boolean): Promise<Goal[]> {
 
   const query = searchParams.toString();
   return apiRequest<Goal[]>(query ? `/goals?${query}` : "/goals");
+}
+
+export function getGoalSuggestions(): Promise<GoalSuggestionsResponse> {
+  return apiRequest<GoalSuggestionsResponse>("/goals/suggestions");
 }
 
 export function updateGoalProgress(

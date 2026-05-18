@@ -23,7 +23,12 @@ export type SpendingAlertsResponse = {
 };
 
 export type SpendingAlert = {
-  alert_type: "micro_expense" | "repeated_spending" | "weekend_spending" | "behavior_score";
+  alert_type:
+    | "micro_expense"
+    | "repeated_spending"
+    | "weekend_spending"
+    | "behavior_score"
+    | "budget_breach";
   severity: "info" | "warning" | "critical";
   title: string;
   message: string;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { ExpenseCreateForm } from "../features/expenses/components/ExpenseCreateForm";
+import { ExpenseImportPanel } from "../features/expenses/components/ExpenseImportPanel";
 import { ExpenseList } from "../features/expenses/components/ExpenseList";
 
 export function ExpensesPage() {
@@ -16,7 +17,10 @@ export function ExpensesPage() {
       </div>
 
       <div className="expenses-layout">
-        <ExpenseCreateForm onCreated={() => setRefreshKey((value) => value + 1)} />
+        <div className="expense-entry-stack">
+          <ExpenseCreateForm onCreated={() => setRefreshKey((value) => value + 1)} />
+          <ExpenseImportPanel onImported={() => setRefreshKey((value) => value + 1)} />
+        </div>
         <ExpenseList refreshKey={refreshKey} />
       </div>
     </section>

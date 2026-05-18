@@ -11,6 +11,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.budget import Budget
     from app.models.expense import Expense
     from app.models.goal import Goal
 
@@ -45,6 +46,10 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     goals: Mapped[list[Goal]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    budgets: Mapped[list[Budget]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

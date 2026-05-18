@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import get_current_active_user
 from app.db.session import get_db_session
 from app.models.user import User
+from app.repositories.budget_repository import BudgetRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.goal_repository import GoalRepository
 from app.schemas.dashboard import DashboardResponse
@@ -31,6 +32,7 @@ async def get_dashboard(
     dashboard_service = DashboardService(
         expense_repository=ExpenseRepository(db_session),
         goal_repository=GoalRepository(db_session),
+        budget_repository=BudgetRepository(db_session),
     )
     return await dashboard_service.get_dashboard(
         user_id=current_user.id,

@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
+from app.repositories.budget_repository import BudgetRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.goal_repository import GoalRepository
 from app.schemas.dashboard import DashboardResponse
@@ -16,10 +17,11 @@ class DashboardService:
         *,
         expense_repository: ExpenseRepository,
         goal_repository: GoalRepository,
+        budget_repository: BudgetRepository | None = None,
     ) -> None:
         self.analytics_service = AnalyticsService(expense_repository)
         self.insight_service = InsightService(expense_repository)
-        self.alert_service = AlertService(expense_repository)
+        self.alert_service = AlertService(expense_repository, budget_repository)
         self.goal_service = GoalService(goal_repository)
 
     async def get_dashboard(

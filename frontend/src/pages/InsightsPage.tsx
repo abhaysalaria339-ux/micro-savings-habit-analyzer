@@ -14,6 +14,7 @@ import {
   getSpendingProfile,
   MLSpendingProfileResponse,
 } from "../features/ml/api/mlApi";
+import { downloadMonthlyReport } from "../features/reports/api/reportApi";
 
 type InsightPeriod = "weekly" | "monthly";
 
@@ -26,6 +27,7 @@ export function InsightsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -88,6 +90,14 @@ export function InsightsPage() {
             Monthly
           </button>
         </div>
+        <button
+          className="secondary-button"
+          disabled={isDownloadingReport}
+          onClick={() => void handleReportDownload()}
+          type="button"
+        >
+          {isDownloadingReport ? "Exporting..." : "Export CSV"}
+        </button>
       </div>
 
       <ErrorMessage
@@ -247,6 +257,19 @@ export function InsightsPage() {
       </section>
     </section>
   );
+
+  async function handleReportDownload() {
+    setIsDownloadingReport(true);
+    setError(null);
+
+    try {
+      await downloadMonthlyReport();
+    } catch {
+      setError("Unable to download the monthly report. Try again.");
+    } finally {
+      setIsDownloadingReport(false);
+    }
+  }
 }
 
 function formatInsightType(type: string): string {

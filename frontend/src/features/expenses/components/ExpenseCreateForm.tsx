@@ -3,7 +3,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { ErrorMessage } from "../../../components/ErrorMessage";
 import { ApiError } from "../../../lib/api/apiError";
 import { formatCurrency } from "../../../lib/formatters";
-import { createExpense, Expense } from "../api/expenseApi";
+import { checkExpenseDuplicate, createExpense, Expense } from "../api/expenseApi";
 
 type ExpenseCreateFormProps = {
   onCreated?: (expense: Expense) => void;
@@ -64,11 +64,24 @@ export function ExpenseCreateForm({ onCreated }: ExpenseCreateFormProps) {
     setIsSubmitting(true);
 
     try {
-      const expense = await createExpense({
+      const payload = {
         amount: amount.trim(),
         category: category.trim(),
         description: description.trim() || undefined,
         spent_at: new Date(spentAt).toISOString(),
+      };
+      const duplicateCheck = await checkExpenseDuplicate(payload);
+      if (duplicateCheck.has_duplicates) {
+        const shouldContinue = window.confirm(
+          "A similar expense already exists for this date. Add it anyway?",
+        );
+        if (!shouldContinue) {
+          return;
+        }
+      }
+
+      const expense = await createExpense({
+        ...payload,
       });
       onCreated?.(expense);
       setSuccessMessage(`${expense.category} expense added.`);

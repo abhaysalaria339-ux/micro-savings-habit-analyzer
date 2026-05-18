@@ -947,14 +947,28 @@ textarea:focus-visible {
 
 .expenses-layout,
 .goals-layout,
+.budgets-layout,
 .simulator-layout {
   display: grid;
   grid-template-columns: minmax(320px, 0.76fr) minmax(0, 1.24fr);
   gap: 16px;
 }
 
+.expense-entry-stack {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.goal-entry-stack {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
 .expense-form,
-.goal-form {
+.goal-form,
+.budget-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
@@ -1018,6 +1032,225 @@ textarea:focus-visible {
 .form-message.success {
   background: var(--color-savings-soft);
   color: var(--color-savings);
+}
+
+.import-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.csv-format-note {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  padding: 12px;
+}
+
+.csv-format-note strong {
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.csv-format-note span,
+.csv-format-note small {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.file-picker {
+  display: grid;
+  min-height: 48px;
+  align-items: center;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 850;
+  padding: 12px;
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.file-picker:hover {
+  border-color: rgba(37, 99, 235, 0.32);
+  background: var(--color-primary-soft);
+}
+
+.file-picker input {
+  display: none;
+}
+
+.import-result {
+  display: grid;
+  gap: 6px;
+  border-radius: var(--radius-card);
+  background: var(--color-savings-soft);
+  color: var(--color-savings);
+  padding: 12px;
+}
+
+.import-result span,
+.import-result li {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.import-result ul {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.budget-metric-grid .metric-panel:nth-child(3) strong {
+  color: var(--color-savings);
+}
+
+.budget-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.budget-item {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 14px;
+}
+
+.budget-item-header,
+.budget-amount-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.budget-item-header div {
+  display: grid;
+  gap: 4px;
+}
+
+.budget-item-header span {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--color-savings-soft);
+  color: var(--color-savings);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
+  text-transform: uppercase;
+}
+
+.budget-item.watch .budget-item-header span {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.budget-item.over .budget-item-header span {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.budget-item-header strong {
+  color: var(--color-text);
+  font-size: 20px;
+}
+
+.budget-progress-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7ecef;
+}
+
+.budget-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-savings), #4abf8f);
+  animation: progress-fill 560ms var(--transition-smooth) both;
+  transform-origin: left;
+}
+
+.budget-item.watch .budget-progress-track span {
+  background: linear-gradient(90deg, #d89b2c, var(--color-warning));
+}
+
+.budget-item.over .budget-progress-track span {
+  background: linear-gradient(90deg, #d94a3f, var(--color-danger));
+}
+
+.budget-amount-row span {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.goal-suggestion-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.goal-suggestion-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.74);
+  padding: 14px;
+}
+
+.goal-suggestion-list div {
+  display: grid;
+  gap: 7px;
+}
+
+.goal-suggestion-list span {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 5px 8px;
+  text-transform: uppercase;
+}
+
+.goal-suggestion-list strong {
+  color: var(--color-text);
+}
+
+.goal-suggestion-list p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.goal-suggestion-list aside {
+  border-radius: 999px;
+  background: var(--color-savings-soft);
+  color: var(--color-savings);
+  font-size: 13px;
+  font-weight: 900;
+  padding: 7px 10px;
+  white-space: nowrap;
 }
 
 .muted-copy {
@@ -1440,6 +1673,194 @@ textarea:focus-visible {
   padding: 11px 12px;
 }
 
+.advanced-metric-grid .metric-panel:nth-child(3) strong {
+  color: var(--color-savings);
+}
+
+.advanced-report-panel {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.advanced-report-panel p,
+.advanced-report-panel strong {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.advanced-report-panel p {
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.advanced-report-panel > strong {
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.78fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.heatmap-day {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: #f0f3f5;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.heatmap-day:hover {
+  border-color: rgba(37, 99, 235, 0.26);
+  box-shadow: 0 7px 16px rgba(24, 32, 29, 0.08);
+  transform: translateY(-1px);
+}
+
+.heatmap-day.none {
+  background: #f0f3f5;
+}
+
+.heatmap-day.low {
+  border-color: rgba(18, 128, 92, 0.16);
+  background: #dff5ec;
+}
+
+.heatmap-day.medium {
+  border-color: rgba(18, 128, 92, 0.24);
+  background: #8ddbb9;
+}
+
+.heatmap-day.high {
+  border-color: rgba(18, 128, 92, 0.32);
+  background: #12805c;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.heatmap-legend .heatmap-day {
+  width: 16px;
+  flex: 0 0 16px;
+}
+
+.advanced-card-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coach-card,
+.recurring-card,
+.anomaly-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 14px;
+}
+
+.coach-card > div,
+.recurring-card > div,
+.anomaly-card > div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.coach-card strong,
+.recurring-card strong,
+.anomaly-card strong {
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.coach-card p,
+.coach-card small,
+.recurring-card p,
+.recurring-card small,
+.anomaly-card p,
+.anomaly-card small {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.coach-card small,
+.recurring-card small,
+.anomaly-card small {
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.coach-card aside,
+.recurring-card aside,
+.anomaly-card aside {
+  border-radius: 999px;
+  background: var(--color-savings-soft);
+  color: var(--color-savings);
+  font-size: 13px;
+  font-weight: 900;
+  padding: 7px 10px;
+  white-space: nowrap;
+}
+
+.priority-pill,
+.anomaly-card span {
+  width: fit-content;
+  border-radius: 999px;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  padding: 6px 9px;
+  text-transform: uppercase;
+}
+
+.priority-pill.high,
+.anomaly-card.critical span {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.priority-pill.medium,
+.anomaly-card.warning span {
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.priority-pill.low,
+.anomaly-card.info span {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
 .empty-list-item {
   color: var(--color-text-muted);
   font-weight: 800;
@@ -1636,10 +2057,12 @@ textarea:focus-visible {
   }
 
   .metric-grid,
+  .advanced-grid,
   .dashboard-grid,
   .money-leak-score-grid,
   .expenses-layout,
   .goals-layout,
+  .budgets-layout,
   .insights-layout,
   .recommendation-list li,
   .ml-profile-grid,
@@ -1761,8 +2184,10 @@ textarea:focus-visible {
 
   .dashboard-grid,
   .dashboard-grid.lower,
+  .advanced-grid,
   .expenses-layout,
   .goals-layout,
+  .budgets-layout,
   .insights-layout,
   .simulator-layout {
     gap: 12px;
@@ -1796,6 +2221,8 @@ textarea:focus-visible {
   .pagination-row,
   .goal-item-header,
   .goal-amount-row,
+  .budget-item-header,
+  .budget-amount-row,
   .error-message {
     align-items: stretch;
     flex-direction: column;
@@ -1813,6 +2240,7 @@ textarea:focus-visible {
   .quick-add-row,
   .expense-form,
   .goal-form,
+  .budget-form,
   .goal-progress-form,
   .simulator-form,
   .expense-filter-form,
@@ -1847,6 +2275,10 @@ textarea:focus-visible {
   .expense-item,
   .goal-item,
   .alert-card,
+  .coach-card,
+  .recurring-card,
+  .anomaly-card,
+  .goal-suggestion-list li,
   .recommendation-list li,
   .simulation-result-grid article,
   .ml-profile-summary,
@@ -1862,6 +2294,29 @@ textarea:focus-visible {
   .timeline-amount {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .heatmap-grid {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .coach-card,
+  .recurring-card,
+  .anomaly-card {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-suggestion-list li {
+    grid-template-columns: 1fr;
+  }
+
+  .coach-card aside,
+  .recurring-card aside,
+  .anomaly-card aside,
+  .goal-suggestion-list aside {
+    justify-self: start;
+    white-space: normal;
   }
 }
 
@@ -1888,6 +2343,10 @@ textarea:focus-visible {
   .preset-button {
     padding: 0 8px;
     font-size: 14px;
+  }
+
+  .heatmap-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 }
 

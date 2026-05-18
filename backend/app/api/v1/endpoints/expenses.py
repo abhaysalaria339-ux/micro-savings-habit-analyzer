@@ -11,8 +11,20 @@ from app.core.pagination import DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT, MAX_PAGE_OFF
 from app.db.session import get_db_session
 from app.models.user import User
 from app.repositories.expense_repository import ExpenseRepository
-from app.schemas.expense import ExpenseCreate, ExpenseListResponse, ExpenseRead, ExpenseUpdate
-from app.services.expense_service import ExpenseNotFoundError, ExpenseService
+from app.schemas.expense import (
+    ExpenseCreate,
+    ExpenseDuplicateCheckResponse,
+    ExpenseImportRequest,
+    ExpenseImportResponse,
+    ExpenseListResponse,
+    ExpenseRead,
+    ExpenseUpdate,
+)
+from app.services.expense_service import (
+    ExpenseImportFormatError,
+    ExpenseNotFoundError,
+    ExpenseService,
+)
 
 router = APIRouter()
 
@@ -47,6 +59,61 @@ async def list_expenses(
         limit=limit,
         offset=offset,
     )
+
+
+@router.post(
+    "/duplicate-check",
+    response_model=ExpenseDuplicateCheckResponse,
+    summary="Check duplicate expense",
+    description="Check whether a similar expense already exists for the authenticated user.",
+)
+async def check_expense_duplicate(
+    expense_create: ExpenseCreate,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+) -> ExpenseDuplicateCheckResponse:
+    expense_service = ExpenseService(ExpenseRepository(db_session))
+    return await expense_service.check_duplicates(
+        user_id=current_user.id,
+        expense_create=expense_create,
+    )
+
+
+@router.post(
+    "/import",
+    response_model=ExpenseImportResponse,
+    summary="Import expenses from CSV",
+    description=(
+        "Import expense rows from CSV text. Required columns: amount, category, spent_at. "
+        "Optional column: description."
+    ),
+)
+async def import_expenses(
+    import_request: ExpenseImportRequest,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+) -> ExpenseImportResponse:
+    expense_service = ExpenseService(ExpenseRepository(db_session))
+
+    try:
+        result = await expense_service.import_expenses_from_csv(
+            user_id=current_user.id,
+            csv_content=import_request.csv_content,
+        )
+        await db_session.commit()
+    except ExpenseImportFormatError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except SQLAlchemyError as exc:
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to import expenses.",
+        ) from exc
+
+    return result
 
 
 @router.get(

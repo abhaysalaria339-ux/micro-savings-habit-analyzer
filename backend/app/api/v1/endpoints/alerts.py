@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import get_current_active_user
 from app.db.session import get_db_session
 from app.models.user import User
+from app.repositories.budget_repository import BudgetRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.schemas.alert import SpendingAlertsResponse
 from app.services.alert_service import AlertService
@@ -27,7 +28,10 @@ async def get_spending_alerts(
 ) -> SpendingAlertsResponse:
     _validate_date_range(start_date=start_date, end_date=end_date)
 
-    alert_service = AlertService(ExpenseRepository(db_session))
+    alert_service = AlertService(
+        ExpenseRepository(db_session),
+        BudgetRepository(db_session),
+    )
     return await alert_service.get_spending_alerts(
         user_id=current_user.id,
         start_date=start_date,

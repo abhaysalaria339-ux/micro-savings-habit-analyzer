@@ -1,5 +1,15 @@
 """Pydantic schema package."""
 
+from app.schemas.advanced import (
+    AdvancedIntelligenceResponse,
+    CalendarHeatmapDay,
+    CalendarHeatmapResponse,
+    HabitCoachRecommendation,
+    RecurringExpenseCandidate,
+    RecurringExpenseResponse,
+    SpendingAnomaly,
+    WeeklyFinancialHealthReport,
+)
 from app.schemas.alert import SpendingAlert, SpendingAlertsResponse
 from app.schemas.analytics import (
     BehaviorScoreFactor,
@@ -19,10 +29,26 @@ from app.schemas.analytics import (
     WeekdayWeekendAnalysis,
     WeekdayWeekendSpendingSegment,
 )
+from app.schemas.budget import BudgetCreate, BudgetRead, BudgetUpdate
 from app.schemas.dashboard import DashboardResponse
 from app.schemas.error import ErrorDetail, ErrorResponse
-from app.schemas.expense import ExpenseCreate, ExpenseListResponse, ExpenseRead, ExpenseUpdate
-from app.schemas.goal import GoalCreate, GoalProgressUpdate, GoalRead
+from app.schemas.expense import (
+    ExpenseCreate,
+    ExpenseDuplicateCheckResponse,
+    ExpenseImportRequest,
+    ExpenseImportResponse,
+    ExpenseImportRowResult,
+    ExpenseListResponse,
+    ExpenseRead,
+    ExpenseUpdate,
+)
+from app.schemas.goal import (
+    GoalCreate,
+    GoalProgressUpdate,
+    GoalRead,
+    GoalSuggestion,
+    GoalSuggestionsResponse,
+)
 from app.schemas.health import HealthCheckResponse, ReadinessCheckResponse
 from app.schemas.insight import SavingsInsight, SavingsInsightsResponse
 from app.schemas.ml import MLCapability, MLReadinessResponse
@@ -37,13 +63,23 @@ from app.schemas.token import Token, TokenPayload
 from app.schemas.user import UserCreate, UserLogin, UserRead
 
 __all__ = [
-    "CategorySpendingSummary",
+    "AdvancedIntelligenceResponse",
     "BehaviorScoreFactor",
+    "BudgetCreate",
+    "BudgetRead",
+    "BudgetUpdate",
+    "CalendarHeatmapDay",
+    "CalendarHeatmapResponse",
+    "CategorySpendingSummary",
     "DataPipelineResult",
     "DashboardResponse",
     "ErrorDetail",
     "ErrorResponse",
     "ExpenseCreate",
+    "ExpenseDuplicateCheckResponse",
+    "ExpenseImportRequest",
+    "ExpenseImportResponse",
+    "ExpenseImportRowResult",
     "ExpenseListResponse",
     "ExpenseRead",
     "ExpenseUpdate",
@@ -51,6 +87,9 @@ __all__ = [
     "GoalCreate",
     "GoalProgressUpdate",
     "GoalRead",
+    "GoalSuggestion",
+    "GoalSuggestionsResponse",
+    "HabitCoachRecommendation",
     "HabitTimelineEvent",
     "HabitTimelineResponse",
     "HealthCheckResponse",
@@ -63,6 +102,8 @@ __all__ = [
     "ProcessedExpense",
     "MicroExpenseAnalysis",
     "MicroExpensePattern",
+    "RecurringExpenseCandidate",
+    "RecurringExpenseResponse",
     "RepeatedSpendingAnalysis",
     "RepeatedSpendingPattern",
     "ReadinessCheckResponse",
@@ -72,6 +113,7 @@ __all__ = [
     "SavingsSimulationResponse",
     "SpendingAlert",
     "SpendingAlertsResponse",
+    "SpendingAnomaly",
     "SpendingSummary",
     "SpendingTrendAnalysis",
     "SpendingTrendPoint",
@@ -82,4 +124,5 @@ __all__ = [
     "UserRead",
     "WeekdayWeekendAnalysis",
     "WeekdayWeekendSpendingSegment",
+    "WeeklyFinancialHealthReport",
 ]

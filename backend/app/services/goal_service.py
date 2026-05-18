@@ -2,8 +2,10 @@ from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from app.models.goal import Goal
+from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.goal_repository import GoalRepository
-from app.schemas.goal import GoalCreate, GoalProgressUpdate, GoalRead
+from app.schemas.goal import GoalCreate, GoalProgressUpdate, GoalRead, GoalSuggestion
+from app.services.insight_service import InsightService
 
 
 class GoalNotFoundError(Exception):
@@ -11,8 +13,15 @@ class GoalNotFoundError(Exception):
 
 
 class GoalService:
-    def __init__(self, goal_repository: GoalRepository) -> None:
+    def __init__(
+        self,
+        goal_repository: GoalRepository,
+        expense_repository: ExpenseRepository | None = None,
+    ) -> None:
         self.goal_repository = goal_repository
+        self.insight_service = (
+            InsightService(expense_repository) if expense_repository is not None else None
+        )
 
     async def create_goal(
         self,
@@ -63,6 +72,35 @@ class GoalService:
         )
         return self.to_goal_read(updated_goal)
 
+    async def suggest_goals(self, *, user_id: UUID) -> list[GoalSuggestion]:
+        if self.insight_service is None:
+            return []
+
+        insights = await self.insight_service.get_savings_insights(
+            user_id=user_id,
+            period="monthly",
+        )
+        suggestions: list[GoalSuggestion] = []
+        for insight in insights.insights[:4]:
+            suggestions.append(
+                GoalSuggestion(
+                    suggestion_type=self._suggestion_type(insight.insight_type),
+                    title=f"Create goal from {insight.title.lower()}",
+                    message=(
+                        f"Move {insight.estimated_monthly_savings} into a goal if this "
+                        "saving opportunity is completed."
+                    ),
+                    suggested_amount=self._calculate_suggested_goal_amount(
+                        insight.estimated_monthly_savings
+                    ),
+                    confidence="high"
+                    if insight.estimated_monthly_savings >= Decimal("500.00")
+                    else "medium",
+                )
+            )
+
+        return suggestions
+
     def to_goal_read(self, goal: Goal) -> GoalRead:
         return GoalRead(
             id=goal.id,
@@ -92,3 +130,18 @@ class GoalService:
         progress = (current_amount / target_amount) * Decimal("100")
         capped_progress = min(progress, Decimal("100"))
         return capped_progress.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    def _calculate_suggested_goal_amount(self, monthly_saving: Decimal) -> Decimal:
+        return (monthly_saving * Decimal("3")).quantize(
+            Decimal("0.01"),
+            rounding=ROUND_HALF_UP,
+        )
+
+    def _suggestion_type(self, insight_type: str) -> str:
+        if insight_type == "micro_expense":
+            return "micro_savings"
+
+        if insight_type == "category_concentration":
+            return "category_cap"
+
+        return "money_leak"

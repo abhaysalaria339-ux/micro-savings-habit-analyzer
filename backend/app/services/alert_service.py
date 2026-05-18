@@ -2,14 +2,25 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from app.repositories.budget_repository import BudgetRepository
 from app.repositories.expense_repository import ExpenseRepository
 from app.schemas.alert import SpendingAlert, SpendingAlertsResponse
 from app.services.analytics_service import AnalyticsService
+from app.services.budget_service import BudgetService
 
 
 class AlertService:
-    def __init__(self, expense_repository: ExpenseRepository) -> None:
+    def __init__(
+        self,
+        expense_repository: ExpenseRepository,
+        budget_repository: BudgetRepository | None = None,
+    ) -> None:
         self.analytics_service = AnalyticsService(expense_repository)
+        self.budget_service = (
+            BudgetService(budget_repository, expense_repository)
+            if budget_repository is not None
+            else None
+        )
 
     async def get_spending_alerts(
         self,
@@ -52,6 +63,9 @@ class AlertService:
             *self._build_repeated_spending_alerts(repeated_spending.patterns[:2]),
             *self._build_weekend_spending_alerts(weekday_weekend),
         ]
+        if self.budget_service is not None:
+            budgets = await self.budget_service.list_budgets(user_id=user_id)
+            alerts.extend(self._build_budget_alerts(budgets))
 
         return SpendingAlertsResponse(
             start_date=resolved_start_date,
@@ -93,6 +107,34 @@ class AlertService:
             )
 
         return alerts
+
+    def _build_budget_alerts(self, budgets) -> list[SpendingAlert]:
+        alerts: list[SpendingAlert] = []
+
+        for budget in budgets:
+            if budget.usage_percentage < Decimal("80.00"):
+                continue
+
+            is_over_budget = budget.status == "over"
+            alerts.append(
+                SpendingAlert(
+                    alert_type="budget_breach",
+                    severity="critical" if is_over_budget else "warning",
+                    title=f"{budget.category} budget needs attention",
+                    message=(
+                        f"{budget.category} is at {budget.usage_percentage}% of its "
+                        "monthly budget."
+                    ),
+                    nudge="Pause non-essential spending in this category until next month.",
+                    estimated_monthly_impact=(
+                        budget.spent_amount - budget.monthly_limit
+                        if is_over_budget
+                        else budget.remaining_amount
+                    ),
+                )
+            )
+
+        return alerts[:3]
 
     def _build_repeated_spending_alerts(self, patterns) -> list[SpendingAlert]:
         alerts: list[SpendingAlert] = []

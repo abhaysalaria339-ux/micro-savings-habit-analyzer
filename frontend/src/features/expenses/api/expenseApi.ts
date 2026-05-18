@@ -28,6 +28,25 @@ export type ExpenseListResponse = {
   has_more: boolean;
 };
 
+export type ExpenseImportRowResult = {
+  row_number: number;
+  status: "imported" | "failed" | "skipped_duplicate" | "skipped_credit";
+  error: string | null;
+  expense: Expense | null;
+};
+
+export type ExpenseImportResponse = {
+  imported_count: number;
+  failed_count: number;
+  skipped_count: number;
+  results: ExpenseImportRowResult[];
+};
+
+export type ExpenseDuplicateCheckResponse = {
+  has_duplicates: boolean;
+  matches: Expense[];
+};
+
 export type ExpenseListParams = {
   category?: string;
   startDate?: string;
@@ -40,6 +59,26 @@ export function createExpense(payload: CreateExpensePayload): Promise<Expense> {
   return apiRequest<Expense>("/expenses", {
     method: "POST",
     body: payload,
+  });
+}
+
+export function checkExpenseDuplicate(
+  payload: CreateExpensePayload,
+): Promise<ExpenseDuplicateCheckResponse> {
+  return apiRequest<ExpenseDuplicateCheckResponse>("/expenses/duplicate-check", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export function importExpensesFromCsv(
+  csvContent: string,
+): Promise<ExpenseImportResponse> {
+  return apiRequest<ExpenseImportResponse>("/expenses/import", {
+    method: "POST",
+    body: {
+      csv_content: csvContent,
+    },
   });
 }
 

@@ -1,13 +1,28 @@
-from datetime import datetime
+import csv
+from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
+from io import StringIO
 from uuid import UUID
 
 from app.core.pagination import DEFAULT_PAGE_LIMIT, validate_pagination
 from app.models.expense import Expense
 from app.repositories.expense_repository import ExpenseRepository
-from app.schemas.expense import ExpenseCreate, ExpenseListResponse, ExpenseRead, ExpenseUpdate
+from app.schemas.expense import (
+    ExpenseCreate,
+    ExpenseDuplicateCheckResponse,
+    ExpenseImportResponse,
+    ExpenseImportRowResult,
+    ExpenseListResponse,
+    ExpenseRead,
+    ExpenseUpdate,
+)
 
 
 class ExpenseNotFoundError(Exception):
+    pass
+
+
+class ExpenseImportFormatError(Exception):
     pass
 
 
@@ -27,6 +42,110 @@ class ExpenseService:
             category=expense_create.category,
             description=expense_create.description,
             spent_at=expense_create.spent_at,
+        )
+
+    async def check_duplicates(
+        self,
+        *,
+        user_id: UUID,
+        expense_create: ExpenseCreate,
+    ) -> ExpenseDuplicateCheckResponse:
+        duplicates = await self.expense_repository.find_potential_duplicates(
+            user_id=user_id,
+            amount=expense_create.amount,
+            category=expense_create.category,
+            description=expense_create.description,
+            spent_at=expense_create.spent_at,
+        )
+        matches = [ExpenseRead.model_validate(expense) for expense in duplicates]
+        return ExpenseDuplicateCheckResponse(
+            has_duplicates=bool(matches),
+            matches=matches,
+        )
+
+    async def import_expenses_from_csv(
+        self,
+        *,
+        user_id: UUID,
+        csv_content: str,
+    ) -> ExpenseImportResponse:
+        reader = csv.DictReader(StringIO(csv_content.strip()))
+        required_columns = {"amount", "category", "spent_at"}
+        if reader.fieldnames is None:
+            raise ExpenseImportFormatError("CSV must include a header row.")
+
+        normalized_fieldnames = {
+            self._normalize_import_key(field) for field in reader.fieldnames if field
+        }
+        missing_columns = required_columns - normalized_fieldnames
+        if missing_columns:
+            missing = ", ".join(sorted(missing_columns))
+            raise ExpenseImportFormatError(f"CSV is missing required columns: {missing}.")
+
+        results: list[ExpenseImportRowResult] = []
+        imported_count = 0
+        failed_count = 0
+        skipped_count = 0
+
+        for row_number, row in enumerate(reader, start=2):
+            try:
+                expense_create = self._expense_create_from_import_row(
+                    self._normalize_import_row(row)
+                )
+                duplicates = await self.check_duplicates(
+                    user_id=user_id,
+                    expense_create=expense_create,
+                )
+                if duplicates.has_duplicates:
+                    skipped_count += 1
+                    results.append(
+                        ExpenseImportRowResult(
+                            row_number=row_number,
+                            status="skipped_duplicate",
+                            error="Potential duplicate expense already exists.",
+                            expense=duplicates.matches[0],
+                        )
+                    )
+                    continue
+
+                expense = await self.create_expense(
+                    user_id=user_id,
+                    expense_create=expense_create,
+                )
+            except SkippedCreditTransaction as exc:
+                skipped_count += 1
+                results.append(
+                    ExpenseImportRowResult(
+                        row_number=row_number,
+                        status="skipped_credit",
+                        error=str(exc),
+                    )
+                )
+            except (InvalidOperation, ValueError) as exc:
+                failed_count += 1
+                results.append(
+                    ExpenseImportRowResult(
+                        row_number=row_number,
+                        status="failed",
+                        error=str(exc),
+                    )
+                )
+                continue
+
+            imported_count += 1
+            results.append(
+                ExpenseImportRowResult(
+                    row_number=row_number,
+                    status="imported",
+                    expense=ExpenseRead.model_validate(expense),
+                )
+            )
+
+        return ExpenseImportResponse(
+            imported_count=imported_count,
+            failed_count=failed_count,
+            skipped_count=skipped_count,
+            results=results,
         )
 
     async def list_expenses(
@@ -135,3 +254,94 @@ class ExpenseService:
             raise ExpenseNotFoundError("Expense not found.")
 
         await self.expense_repository.delete(expense=expense)
+
+    def _expense_create_from_import_row(self, row: dict[str, str | None]) -> ExpenseCreate:
+        amount = self._parse_import_amount(row.get("amount"))
+        category = (row.get("category") or "").strip()
+        if not category:
+            raise ValueError("Category is required.")
+
+        spent_at = self._parse_import_datetime(row.get("spent_at"))
+        description = (row.get("description") or "").strip() or None
+
+        return ExpenseCreate(
+            amount=amount,
+            category=category,
+            description=description,
+            spent_at=spent_at,
+        )
+
+    def _normalize_import_row(self, row: dict[str, str | None]) -> dict[str, str | None]:
+        normalized: dict[str, str | None] = {}
+        for key, value in row.items():
+            if key is None:
+                continue
+            normalized[self._normalize_import_key(key)] = value
+
+        transaction_type = (normalized.get("transaction_type") or "").lower()
+        credit_value = normalized.get("credit")
+        if transaction_type in {"credit", "deposit", "income"}:
+            raise SkippedCreditTransaction("Credit transaction skipped.")
+
+        if not normalized.get("amount"):
+            normalized["amount"] = normalized.get("debit") or normalized.get("withdrawal")
+        elif credit_value and not normalized.get("debit"):
+            raise SkippedCreditTransaction("Credit transaction skipped.")
+
+        if not normalized.get("category"):
+            normalized["category"] = normalized.get("merchant") or normalized.get("narration")
+
+        if not normalized.get("description"):
+            normalized["description"] = normalized.get("narration") or normalized.get("merchant")
+
+        return normalized
+
+    def _normalize_import_key(self, key: str) -> str:
+        normalized = key.strip().lower().replace(" ", "_").replace("-", "_")
+        aliases = {
+            "date": "spent_at",
+            "transaction_date": "spent_at",
+            "txn_date": "spent_at",
+            "time": "spent_at",
+            "value": "amount",
+            "transaction_amount": "amount",
+            "debit_amount": "debit",
+            "withdrawal_amount": "withdrawal",
+            "paid": "debit",
+            "remarks": "description",
+            "note": "description",
+            "details": "description",
+            "payee": "merchant",
+            "merchant_name": "merchant",
+            "type": "transaction_type",
+            "dr_cr": "transaction_type",
+        }
+        return aliases.get(normalized, normalized)
+
+    def _parse_import_amount(self, value: str | None) -> Decimal:
+        if value is None or not value.strip():
+            raise ValueError("Amount is required.")
+
+        amount = Decimal(value.strip())
+        if amount <= Decimal("0"):
+            raise ValueError("Amount must be greater than zero.")
+
+        return amount
+
+    def _parse_import_datetime(self, value: str | None) -> datetime:
+        if value is None or not value.strip():
+            raise ValueError("spent_at is required.")
+
+        cleaned = value.strip().replace("Z", "+00:00")
+        if len(cleaned) == 10 and cleaned[4] == "-" and cleaned[7] == "-":
+            cleaned = f"{cleaned}T12:00:00+00:00"
+
+        spent_at = datetime.fromisoformat(cleaned)
+        if spent_at.tzinfo is None:
+            return spent_at.replace(tzinfo=UTC)
+
+        return spent_at
+
+
+class SkippedCreditTransaction(Exception):
+    pass
