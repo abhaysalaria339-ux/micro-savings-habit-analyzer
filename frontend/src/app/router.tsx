@@ -6,12 +6,12 @@ import { AuthLayout } from "../layouts/AuthLayout";
 import { AppLayout } from "../layouts/AppLayout";
 import { AdvancedPage } from "../pages/AdvancedPage";
 import { BudgetsPage } from "../pages/BudgetsPage";
-import { DashboardPage } from "../pages/DashboardPage";
 import { ExpensesPage } from "../pages/ExpensesPage";
 import { GoalsPage } from "../pages/GoalsPage";
 import { InsightsPage } from "../pages/InsightsPage";
 import { MorePage } from "../pages/MorePage";
 import { SimulatorPage } from "../pages/SimulatorPage";
+import { WorkspacePage } from "../pages/WorkspacePage";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
 
@@ -48,7 +48,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "dashboard",
-        element: <DashboardPage />,
+        element: <WorkspacePage />,
       },
       {
         path: "expenses",

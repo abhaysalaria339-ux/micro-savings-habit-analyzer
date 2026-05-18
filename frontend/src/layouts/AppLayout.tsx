@@ -1,25 +1,46 @@
-import { useEffect, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { MouseEvent, useEffect, useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { getCurrentUser, User } from "../features/auth/api/authApi";
 import { ApiError } from "../lib/api/apiError";
 import { clearAccessToken } from "../lib/auth/tokenStorage";
+import {
+  workspaceSectionChangeEvent,
+  workspaceSectionConfig,
+} from "../pages/workspaceConfig";
 
-const navigationItems = [
-  { label: "Dashboard", to: "/dashboard" },
-  { label: "Expenses", to: "/expenses" },
-  { label: "Goals", to: "/goals" },
-  { label: "Budgets", to: "/budgets" },
-  { label: "Insights", to: "/insights" },
-  { label: "Advanced", to: "/advanced" },
-  { label: "Simulator", to: "/simulator" },
-  { label: "More", to: "/more" },
-];
+type ThemeMode = "light" | "dark";
+
+const navigationItems = workspaceSectionConfig.map((section) => ({
+  label: section.label,
+  sectionId: section.id,
+  to: `/dashboard#${section.id}`,
+}));
+
+const routeSectionByPath = new Map([
+  ["/dashboard", "workspace-dashboard"],
+  ["/expenses", "workspace-expenses"],
+  ["/goals", "workspace-goals"],
+  ["/budgets", "workspace-budgets"],
+  ["/insights", "workspace-insights"],
+  ["/advanced", "workspace-advanced"],
+  ["/simulator", "workspace-simulator"],
+  ["/more", "workspace-more"],
+]);
 
 export function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [activeWorkspaceSection, setActiveWorkspaceSection] = useState(() =>
+    getInitialWorkspaceSection(),
+  );
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => getInitialThemeMode());
+  const routeActiveSection =
+    routeSectionByPath.get(location.pathname) || "workspace-dashboard";
+  const displayedActiveSection =
+    location.pathname === "/dashboard" ? activeWorkspaceSection : routeActiveSection;
 
   useEffect(() => {
     let ignore = false;
@@ -51,9 +72,59 @@ export function AppLayout() {
     };
   }, [navigate]);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeMode;
+    window.localStorage.setItem("theme-mode", themeMode);
+  }, [themeMode]);
+
+  useEffect(() => {
+    function handleWorkspaceSectionChange(event: Event) {
+      const sectionId = (event as CustomEvent<string>).detail;
+      if (sectionId) {
+        setActiveWorkspaceSection(sectionId);
+      }
+    }
+
+    window.addEventListener(workspaceSectionChangeEvent, handleWorkspaceSectionChange);
+
+    return () => {
+      window.removeEventListener(
+        workspaceSectionChangeEvent,
+        handleWorkspaceSectionChange,
+      );
+    };
+  }, []);
+
   function handleLogout() {
     clearAccessToken();
     navigate("/auth/login", { replace: true });
+  }
+
+  function handleWorkspaceNavigation(
+    event: MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+  ) {
+    setActiveWorkspaceSection(sectionId);
+
+    if (location.pathname !== "/dashboard") {
+      return;
+    }
+
+    const section = document.getElementById(sectionId);
+    if (!section) {
+      return;
+    }
+
+    event.preventDefault();
+    window.history.replaceState(null, "", `/dashboard#${sectionId}`);
+    section.scrollIntoView({
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+      block: "start",
+    });
+  }
+
+  function toggleThemeMode() {
+    setThemeMode((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   }
 
   return (
@@ -69,15 +140,21 @@ export function AppLayout() {
 
         <nav className="app-nav">
           {navigationItems.map((item) => (
-            <NavLink
-              className={({ isActive }) =>
-                isActive ? "app-nav-link active" : "app-nav-link"
+            <Link
+              aria-current={
+                displayedActiveSection === item.sectionId ? "page" : undefined
               }
-              key={item.to}
+              className={
+                displayedActiveSection === item.sectionId
+                  ? "app-nav-link active"
+                  : "app-nav-link"
+              }
+              key={item.sectionId}
+              onClick={(event) => handleWorkspaceNavigation(event, item.sectionId)}
               to={item.to}
             >
               {item.label}
-            </NavLink>
+            </Link>
           ))}
         </nav>
 
@@ -93,6 +170,15 @@ export function AppLayout() {
             <strong>Personal finance behavior</strong>
           </div>
           <div className="topbar-actions">
+            <button
+              aria-label={`Switch to ${themeMode === "dark" ? "light" : "dark"} mode`}
+              className="theme-toggle-button"
+              onClick={toggleThemeMode}
+              type="button"
+            >
+              <span aria-hidden="true">{themeMode === "dark" ? "L" : "D"}</span>
+              <strong>{themeMode === "dark" ? "Light" : "Dark"}</strong>
+            </button>
             <div className="user-summary" aria-label="Current user">
               <span>{getInitials(currentUser)}</span>
               <div>
@@ -112,6 +198,23 @@ export function AppLayout() {
       </div>
     </div>
   );
+}
+
+function getInitialWorkspaceSection(): string {
+  return window.location.hash.slice(1) || "workspace-dashboard";
+}
+
+function getInitialThemeMode(): ThemeMode {
+  const savedTheme = window.localStorage.getItem("theme-mode");
+  if (savedTheme === "dark" || savedTheme === "light") {
+    return savedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 function getInitials(user: User | null): string {

@@ -36,6 +36,33 @@
   --transition-smooth: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
+[data-theme="dark"] {
+  color: #edf3f1;
+  background: #101614;
+
+  --color-page: #101614;
+  --color-surface: rgba(22, 30, 27, 0.88);
+  --color-surface-solid: #18201d;
+  --color-surface-muted: #202a26;
+  --color-border: rgba(237, 243, 241, 0.11);
+  --color-border-strong: rgba(237, 243, 241, 0.18);
+  --color-text: #edf3f1;
+  --color-text-muted: #a5b0ac;
+  --color-text-soft: #7f8b87;
+  --color-primary: #78a6ff;
+  --color-primary-hover: #9bbdff;
+  --color-primary-soft: rgba(67, 108, 188, 0.2);
+  --color-savings: #5ad4a2;
+  --color-savings-hover: #78e0b6;
+  --color-savings-soft: rgba(43, 136, 100, 0.18);
+  --color-warning: #f1c66f;
+  --color-warning-soft: rgba(183, 121, 31, 0.18);
+  --color-danger: #ff8a80;
+  --color-danger-soft: rgba(180, 35, 24, 0.18);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.22), 0 18px 48px rgba(0, 0, 0, 0.24);
+  --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.28), 0 26px 62px rgba(0, 0, 0, 0.34);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -52,6 +79,12 @@ body {
   overflow-x: hidden;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(244, 246, 248, 0) 360px),
+    var(--color-page);
+}
+
+[data-theme="dark"] body {
+  background:
+    linear-gradient(180deg, rgba(45, 58, 53, 0.38), rgba(16, 22, 20, 0) 380px),
     var(--color-page);
 }
 
@@ -489,12 +522,86 @@ textarea:focus-visible {
   font-weight: 750;
 }
 
+.theme-toggle-button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-text);
+  cursor: pointer;
+  font-weight: 850;
+  padding: 0 12px;
+  transition:
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.theme-toggle-button span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.theme-toggle-button:hover {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: var(--color-surface-solid);
+  box-shadow: 0 10px 24px rgba(24, 32, 29, 0.08);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .theme-toggle-button,
+[data-theme="dark"] .user-summary,
+[data-theme="dark"] .app-sidebar {
+  background: rgba(22, 30, 27, 0.74);
+}
+
 .app-content {
   padding: var(--space-page);
 }
 
 .app-content > * {
   animation: page-enter 300ms var(--transition-smooth) both;
+}
+
+.continuous-workspace {
+  display: grid;
+  gap: clamp(34px, 5vw, 72px);
+  perspective: 1300px;
+}
+
+.workspace-page-section {
+  min-height: calc(100vh - 124px);
+  scroll-margin-top: 104px;
+  transform: translateY(14px) rotateX(1.8deg) scale(0.985);
+  transform-origin: center top;
+  transition:
+    transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    filter 420ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 320ms ease;
+  opacity: 0.84;
+  filter: saturate(0.92);
+}
+
+.workspace-page-section.active {
+  transform: translateY(0) rotateX(0deg) scale(1);
+  opacity: 1;
+  filter: saturate(1);
+}
+
+.workspace-page-section > .dashboard-page,
+.workspace-page-section > .page-surface {
+  width: 100%;
 }
 
 .dashboard-page,
@@ -2129,6 +2236,73 @@ textarea:focus-visible {
   display: none;
 }
 
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
+  background: rgba(22, 30, 27, 0.94);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus {
+  background: var(--color-surface-solid);
+}
+
+[data-theme="dark"] .app-topbar {
+  background: rgba(16, 22, 20, 0.82);
+}
+
+[data-theme="dark"] .app-brand span {
+  background: linear-gradient(180deg, rgba(43, 136, 100, 0.28), rgba(22, 30, 27, 0.9));
+}
+
+[data-theme="dark"] .secondary-button,
+[data-theme="dark"] .segmented-control,
+[data-theme="dark"] .scroll-sync-tabs-track,
+[data-theme="dark"] .coach-card,
+[data-theme="dark"] .recurring-card,
+[data-theme="dark"] .anomaly-card,
+[data-theme="dark"] .quick-add-button {
+  background: rgba(22, 30, 27, 0.72);
+}
+
+[data-theme="dark"] .quick-add-button,
+[data-theme="dark"] .status-list li,
+[data-theme="dark"] .money-leak-score-copy strong,
+[data-theme="dark"] .behavior-score span,
+[data-theme="dark"] .ml-profile-summary p,
+[data-theme="dark"] .coach-card strong,
+[data-theme="dark"] .recurring-card strong,
+[data-theme="dark"] .anomaly-card strong {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .scroll-sync-tab-button.active,
+[data-theme="dark"] .segmented-control button.active {
+  background: rgba(33, 44, 39, 0.96);
+}
+
+[data-theme="dark"] .trend-bar-item span {
+  background: linear-gradient(180deg, #8fb6ff, #5b89ee);
+}
+
+[data-theme="dark"] .goal-progress-track,
+[data-theme="dark"] .budget-progress-track {
+  background: rgba(237, 243, 241, 0.12);
+}
+
+[data-theme="dark"] .state-message {
+  background: rgba(22, 30, 27, 0.72);
+}
+
+[data-theme="dark"] .state-message strong,
+[data-theme="dark"] .goal-item-header h3,
+[data-theme="dark"] .expense-item h3,
+[data-theme="dark"] .budget-item-header strong,
+[data-theme="dark"] .panel-heading h2,
+[data-theme="dark"] .dashboard-panel h2 {
+  color: var(--color-text);
+}
+
 @keyframes state-spin {
   to {
     transform: rotate(360deg);
@@ -2207,6 +2381,11 @@ textarea:focus-visible {
   .app-shell {
     grid-template-columns: 1fr;
     min-height: 100dvh;
+  }
+
+  .workspace-page-section {
+    min-height: auto;
+    scroll-margin-top: 84px;
   }
 
   .app-sidebar {
@@ -2399,6 +2578,11 @@ textarea:focus-visible {
     flex-direction: column;
   }
 
+  .theme-toggle-button {
+    width: 100%;
+    justify-content: center;
+  }
+
   .user-summary {
     width: 100%;
   }
@@ -2580,7 +2764,9 @@ textarea:focus-visible {
 
   .scroll-sync-tab-button,
   .scroll-sync-tab-button:hover,
-  .scroll-sync-tab-button.active {
+  .scroll-sync-tab-button.active,
+  .workspace-page-section,
+  .workspace-page-section.active {
     transform: none;
   }
 }
