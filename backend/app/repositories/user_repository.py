@@ -37,3 +37,14 @@ class UserRepository:
         await self.db_session.flush()
         await self.db_session.refresh(user)
         return user
+
+    async def update(self, *, user: User, values: dict) -> User:
+        for key, value in values.items():
+            setattr(user, key, value)
+        await self.db_session.flush()
+        await self.db_session.refresh(user)
+        return user
+
+    async def delete(self, *, user: User) -> None:
+        await self.db_session.delete(user)
+        await self.db_session.flush()

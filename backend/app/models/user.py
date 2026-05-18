@@ -14,6 +14,8 @@ if TYPE_CHECKING:
     from app.models.budget import Budget
     from app.models.expense import Expense
     from app.models.goal import Goal
+    from app.models.notification import Notification
+    from app.models.user_settings import UserSettings
 
 
 class User(Base):
@@ -50,6 +52,15 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     budgets: Mapped[list[Budget]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    settings: Mapped[UserSettings | None] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
+    notifications: Mapped[list[Notification]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

@@ -17,6 +17,7 @@ from app.schemas.expense import (
     ExpenseImportRequest,
     ExpenseImportResponse,
     ExpenseListResponse,
+    ExpensePdfImportRequest,
     ExpenseRead,
     ExpenseUpdate,
 )
@@ -111,6 +112,40 @@ async def import_expenses(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to import expenses.",
+        ) from exc
+
+    return result
+
+
+@router.post(
+    "/import/pdf",
+    response_model=ExpenseImportResponse,
+    summary="Import expenses from bank statement PDF",
+    description="Extract transaction-like rows from a base64 PDF bank statement.",
+)
+async def import_expenses_from_pdf(
+    import_request: ExpensePdfImportRequest,
+    db_session: AsyncSession = Depends(get_db_session),
+    current_user: User = Depends(get_current_active_user),
+) -> ExpenseImportResponse:
+    expense_service = ExpenseService(ExpenseRepository(db_session))
+
+    try:
+        result = await expense_service.import_expenses_from_pdf(
+            user_id=current_user.id,
+            pdf_base64=import_request.pdf_base64,
+        )
+        await db_session.commit()
+    except ExpenseImportFormatError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+    except SQLAlchemyError as exc:
+        await db_session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to import PDF expenses.",
         ) from exc
 
     return result

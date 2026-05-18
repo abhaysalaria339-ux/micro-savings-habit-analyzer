@@ -10,6 +10,7 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { ExpensesPage } from "../pages/ExpensesPage";
 import { GoalsPage } from "../pages/GoalsPage";
 import { InsightsPage } from "../pages/InsightsPage";
+import { MorePage } from "../pages/MorePage";
 import { SimulatorPage } from "../pages/SimulatorPage";
 import { LoginPage } from "../pages/auth/LoginPage";
 import { RegisterPage } from "../pages/auth/RegisterPage";
@@ -72,6 +73,10 @@ export const router = createBrowserRouter([
       {
         path: "simulator",
         element: <SimulatorPage />,
+      },
+      {
+        path: "more",
+        element: <MorePage />,
       },
     ],
   },

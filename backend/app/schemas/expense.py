@@ -54,6 +54,10 @@ class ExpenseImportRequest(BaseModel):
     csv_content: str = Field(min_length=1, max_length=500_000)
 
 
+class ExpensePdfImportRequest(BaseModel):
+    pdf_base64: str = Field(min_length=1, max_length=2_000_000)
+
+
 class ExpenseImportRowResult(BaseModel):
     row_number: int
     status: Literal["imported", "failed", "skipped_duplicate", "skipped_credit"]

@@ -13,6 +13,7 @@ const navigationItems = [
   { label: "Insights", to: "/insights" },
   { label: "Advanced", to: "/advanced" },
   { label: "Simulator", to: "/simulator" },
+  { label: "More", to: "/more" },
 ];
 
 export function AppLayout() {

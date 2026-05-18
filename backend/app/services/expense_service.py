@@ -1,7 +1,8 @@
+import base64
 import csv
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from io import StringIO
+from io import BytesIO, StringIO
 from uuid import UUID
 
 from app.core.pagination import DEFAULT_PAGE_LIMIT, validate_pagination
@@ -147,6 +148,25 @@ class ExpenseService:
             skipped_count=skipped_count,
             results=results,
         )
+
+    async def import_expenses_from_pdf(
+        self,
+        *,
+        user_id: UUID,
+        pdf_base64: str,
+    ) -> ExpenseImportResponse:
+        try:
+            from pypdf import PdfReader
+        except ImportError as exc:
+            raise ExpenseImportFormatError(
+                "PDF import requires the pypdf package to be installed."
+            ) from exc
+
+        pdf_bytes = base64.b64decode(pdf_base64)
+        reader = PdfReader(BytesIO(pdf_bytes))
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        csv_content = self._extract_csv_like_rows_from_pdf_text(text)
+        return await self.import_expenses_from_csv(user_id=user_id, csv_content=csv_content)
 
     async def list_expenses(
         self,
@@ -341,6 +361,32 @@ class ExpenseService:
             return spent_at.replace(tzinfo=UTC)
 
         return spent_at
+
+    def _extract_csv_like_rows_from_pdf_text(self, text: str) -> str:
+        rows = ["spent_at,description,category,amount"]
+        for line in text.splitlines():
+            parts = [part.strip() for part in line.split() if part.strip()]
+            if len(parts) < 3:
+                continue
+
+            date_value = parts[0]
+            amount_value = parts[-1].replace(",", "")
+            try:
+                Decimal(amount_value)
+                spent_at = self._parse_import_datetime(date_value)
+            except (InvalidOperation, ValueError):
+                continue
+
+            description = " ".join(parts[1:-1])
+            category = description.split()[0] if description else "Imported"
+            rows.append(
+                f"{spent_at.date().isoformat()},{description},{category},{amount_value}"
+            )
+
+        if len(rows) == 1:
+            raise ExpenseImportFormatError("No expense-like rows were found in the PDF.")
+
+        return "\n".join(rows)
 
 
 class SkippedCreditTransaction(Exception):

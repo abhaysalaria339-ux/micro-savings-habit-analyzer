@@ -1253,6 +1253,83 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.compact-form {
+  display: grid;
+  gap: 12px;
+}
+
+.compact-form label {
+  display: grid;
+  gap: 8px;
+  color: #34403c;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.toggle-row {
+  display: flex !important;
+  align-items: center;
+  grid-template-columns: none;
+}
+
+.toggle-row input {
+  width: auto;
+  min-height: auto;
+}
+
+.more-stat {
+  display: grid;
+  gap: 10px;
+}
+
+.more-stat strong {
+  color: var(--color-savings);
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1;
+}
+
+.more-stat p,
+.more-stat small,
+.compact-list p {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.compact-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compact-list li {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-muted);
+  padding: 12px;
+}
+
+.compact-list strong {
+  color: var(--color-text);
+}
+
 .muted-copy {
   margin: 0;
   color: var(--color-text-muted);
@@ -2058,6 +2135,7 @@ textarea:focus-visible {
 
   .metric-grid,
   .advanced-grid,
+  .more-grid,
   .dashboard-grid,
   .money-leak-score-grid,
   .expenses-layout,

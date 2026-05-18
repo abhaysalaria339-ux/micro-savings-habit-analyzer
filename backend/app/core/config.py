@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     app_debug: bool = False
     api_v1_prefix: str = "/api/v1"
     max_request_body_bytes: int = Field(default=1_048_576, gt=0)
+    rate_limit_requests: int = Field(default=120, gt=0)
+    rate_limit_window_seconds: int = Field(default=60, gt=0)
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     log_format: Literal["json", "plain"] = "json"
 
