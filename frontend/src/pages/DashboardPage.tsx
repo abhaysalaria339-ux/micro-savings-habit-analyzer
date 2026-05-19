@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { ApiError } from "../lib/api/apiError";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { StateMessage } from "../components/StateMessage";
+import { subscribeToExpenseDataChanged } from "../lib/expenseEvents";
 import { formatCurrency } from "../lib/formatters";
 import {
   DashboardResponse,
@@ -65,6 +66,12 @@ export function DashboardPage() {
   useEffect(() => {
     window.localStorage.setItem(trendChartPreferenceKey, trendChartType);
   }, [trendChartType]);
+
+  useEffect(() => {
+    return subscribeToExpenseDataChanged(() => {
+      setReloadKey((value) => value + 1);
+    });
+  }, []);
 
   const summaryItems = useMemo(() => {
     if (!dashboard) {

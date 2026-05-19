@@ -3,9 +3,15 @@ import { useState } from "react";
 import { ExpenseCreateForm } from "../features/expenses/components/ExpenseCreateForm";
 import { ExpenseImportPanel } from "../features/expenses/components/ExpenseImportPanel";
 import { ExpenseList } from "../features/expenses/components/ExpenseList";
+import { notifyExpenseDataChanged } from "../lib/expenseEvents";
 
 export function ExpensesPage() {
   const [refreshKey, setRefreshKey] = useState(0);
+
+  function refreshExpenseData() {
+    setRefreshKey((value) => value + 1);
+    notifyExpenseDataChanged();
+  }
 
   return (
     <section className="page-surface" aria-labelledby="expenses-title">
@@ -18,10 +24,10 @@ export function ExpensesPage() {
 
       <div className="expenses-layout">
         <div className="expense-entry-stack">
-          <ExpenseCreateForm onCreated={() => setRefreshKey((value) => value + 1)} />
-          <ExpenseImportPanel onImported={() => setRefreshKey((value) => value + 1)} />
+          <ExpenseCreateForm onCreated={refreshExpenseData} />
+          <ExpenseImportPanel onImported={refreshExpenseData} />
         </div>
-        <ExpenseList refreshKey={refreshKey} />
+        <ExpenseList onChanged={notifyExpenseDataChanged} refreshKey={refreshKey} />
       </div>
     </section>
   );

@@ -12,6 +12,7 @@ import {
 } from "../api/expenseApi";
 
 type ExpenseListProps = {
+  onChanged?: () => void;
   refreshKey: number;
 };
 
@@ -24,7 +25,7 @@ type EditFormState = {
 
 const pageSize = 10;
 
-export function ExpenseList({ refreshKey }: ExpenseListProps) {
+export function ExpenseList({ onChanged, refreshKey }: ExpenseListProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -125,6 +126,7 @@ export function ExpenseList({ refreshKey }: ExpenseListProps) {
       setEditingExpenseId(null);
       setEditForm(null);
       await reloadCurrentPage();
+      onChanged?.();
     } catch (caughtError) {
       setError(toExpenseErrorMessage(caughtError));
     } finally {
@@ -146,6 +148,7 @@ export function ExpenseList({ refreshKey }: ExpenseListProps) {
         expenses.length === 1 && offset > 0 ? Math.max(0, offset - pageSize) : offset;
       setOffset(nextOffset);
       await reloadCurrentPage(nextOffset);
+      onChanged?.();
     } catch (caughtError) {
       setError(toExpenseErrorMessage(caughtError));
     }

@@ -109,11 +109,14 @@ class DashboardService:
             second=0,
             microsecond=0,
         )
-        resolved_end_date = end_date or now
+        resolved_end_date = end_date or self._end_of_day(now)
         return (
             self._normalize_datetime(resolved_start_date),
             self._normalize_datetime(resolved_end_date),
         )
+
+    def _end_of_day(self, value: datetime) -> datetime:
+        return value.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     def _normalize_datetime(self, value: datetime) -> datetime:
         if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:

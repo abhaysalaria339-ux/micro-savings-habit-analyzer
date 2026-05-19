@@ -103,6 +103,17 @@ async def test_build_habit_timeline_returns_behavior_events() -> None:
     assert all(event.action for event in result.events)
 
 
+def test_default_analysis_period_includes_full_current_day() -> None:
+    service = AnalyticsService(FakeHabitTimelineRepository())
+
+    _, end_date = service._resolve_analysis_period(start_date=None, end_date=None)
+
+    assert end_date.hour == 23
+    assert end_date.minute == 59
+    assert end_date.second == 59
+    assert end_date.microsecond == 999999
+
+
 def test_habit_timeline_endpoint_returns_response(
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,

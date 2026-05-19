@@ -765,8 +765,11 @@ class AnalyticsService:
             second=0,
             microsecond=0,
         )
-        resolved_end_date = self._normalize_datetime(end_date) or now
+        resolved_end_date = self._normalize_datetime(end_date) or self._end_of_day(now)
         return resolved_start_date, resolved_end_date
+
+    def _end_of_day(self, value: datetime) -> datetime:
+        return value.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     def _normalize_datetime(self, value: datetime | None) -> datetime | None:
         if value is None:
